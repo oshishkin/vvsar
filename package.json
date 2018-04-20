@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/oshishkin/vvsar#readme",
   "dependencies": {
-    "http.request": "^0.1.7"
+    "http.request": "^0.1.7",
+    "util": "^0.10.3",
+    "xml2js": "^0.4.19"
   }
 }
