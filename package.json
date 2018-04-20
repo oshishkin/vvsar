@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/oshishkin/vvsar/issues"
   },
-  "homepage": "https://github.com/oshishkin/vvsar#readme"
+  "homepage": "https://github.com/oshishkin/vvsar#readme",
+  "dependencies": {
+    "http.request": "^0.1.7"
+  }
 }
