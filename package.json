@@ -1,0 +1,19 @@
+{
+  "name": "vvsar",
+  "version": "1.0.0",
+  "description": "bwhack app",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oshishkin/vvsar.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oshishkin/vvsar/issues"
+  },
+  "homepage": "https://github.com/oshishkin/vvsar#readme"
+}
