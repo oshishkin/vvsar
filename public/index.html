@@ -16,11 +16,8 @@
 </body>
 <script>
     (function init() {
-        document.getElementById('marker').addEventListener('markerFound', (args) => {
-            console.log(args);
-        })
         function contentToAR(innerText) {
-            fetch('/test.svg?name=aidar').then((res) => {
+            fetch('/test.svg').then((res) => {
                 return res.blob();
             }).then((blob) => {
                 var newImg = document.createElement('img'),
