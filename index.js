@@ -125,8 +125,19 @@ app.get("/api/stop", (req, res) => {
             }
         }
     ).then(value =>{
-
+        var now = moment();
+        var maxTimeToBus = 1;
         value.timetable = value.timetable.slice(0, 4);
+        value.timetable = value.timetable.map(current=>{
+            current["timetobus"] = moment(moment(current.departureTime)-now).format('mm');
+            maxTimeToBus = maxTimeToBus<current.timetobus?current.timetobus:maxTimeToBus;
+            return current;
+        });
+        value.timetable = value.timetable.map(current=>{
+            current["progress"] = 100-current.timetobus/maxTimeToBus*100;
+            return current;
+        });
+
         value["weather"] = requestWeatherInfo({lat:GTFS_STOPS[0].stop_lat, lng:GTFS_STOPS[0].stop_lon});
         // console.log(value);
         res.send(value);
