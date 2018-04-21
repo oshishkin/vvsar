@@ -1,5 +1,5 @@
-const httpPort = 80;
-// const httpPort = 8085;
+//const httpPort = 80;
+const httpPort = 8080;
 let http = require('http');
 let json2xml = require('json2xml'); 
 let xml2js = require('xml2js');
@@ -15,7 +15,7 @@ app.route('/').get(function (req, res) {
 });
             
 
-function requestTriasApi(reqData, cbFunction){
+function requestStopInfo(reqData, cbFunction){
     var body = json2xml({
         Trias: {
             ServiceRequest:{
@@ -97,8 +97,8 @@ function requestTriasApi(reqData, cbFunction){
 
 }
 
-app.get("/api", (req, res) => {
-    requestTriasApi({LocationRef:{
+app.get("/api/stop", (req, res) => {
+    requestStopInfo({LocationRef:{
         StopPointRef:"de:08111:6018:0:4"
     }},function(value){
         value.timetable = value.timetable.slice(0,4);

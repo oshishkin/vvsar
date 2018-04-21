@@ -1,9 +1,9 @@
 {
-  "name": "hackaton",
+  "name": "vvsar",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "http://digitalbanana.ru:8888/zhusmansan/digitaltataren.git",
-  "author": "Sim Dim <simdim555@gmail.com>",
+  "repository": "https://github.com/oshishkin/vvsar",
+  "author": "oshishkin <oshishkin@gmail.com>",
   "license": "MIT",
   "private": true,
   "scripts": {
