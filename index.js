@@ -1,7 +1,7 @@
 // import { resolve } from 'url';
 
-const httpPort = 80;
-// const httpPort = 8080;
+//const httpPort = 80;
+const httpPort = 8080;
 let http = require('http');
 var request = require('sync-request');
 let json2xml = require('json2xml'); 
@@ -22,7 +22,7 @@ function requestStopInfo(reqData, cbFunction){
     var body = json2xml({
         Trias: {
             ServiceRequest:{
-                "siri:RequestTimestamp":"2018-04-20T20:30:00",
+                "siri:RequestTimestamp":getDate(),
                 "siri:RequestorRef":"fraunhofer",
                 RequestPayload:{
                     StopEventRequest:{
@@ -149,3 +149,14 @@ app.use(express.static('public'));
 app.listen(httpPort, () => {
     console.info("App is running at port "+httpPort); 
 })
+
+function getDate() {
+    var date = new Date();
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var seconds = date.getSeconds();
+    var day = date.getDate();
+    var month = date.getMonth();
+    var year = date.getFullYear();
+    return year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds;
+}
