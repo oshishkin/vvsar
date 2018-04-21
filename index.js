@@ -1,6 +1,6 @@
 // import { resolve } from 'url';
-
-//const httpPort = 80;
+const k = 273.15;
+// const httpPort = 80;
 const httpPort = 8080;
 let http = require('http');
 var request = require('sync-request');
@@ -10,6 +10,7 @@ var parser = new xml2js.Parser();
 const util = require('util')
 var express = require('express');
 const app = express();
+const moment = require('moment');
 const GTFS_STOPS = [{stop_id:"de:08111:6018:0:4", stop_name:"Nobelstraße", stop_lat:48.740356600365, stop_lon:9.10019824732889}];
 
 app.use('/', express.static('public'));
@@ -83,7 +84,7 @@ function requestStopInfo(reqData, cbFunction){
                                 stopName:current.StopEvent[0].Service[0].DestinationText[0].Text[0]
                             };
                         });
-                        console.log("Stop event=="+util.inspect(mappedResult,false, null));
+                        // console.log("Stop event=="+util.inspect(mappedResult,false, null));
                         resolve({stationName:resultArr[0].StopEvent[0].ThisCall[0].CallAtStop[0].StopPointName[0].Text[0], timetable:mappedResult});
                      });   
              
@@ -105,22 +106,16 @@ function requestStopInfo(reqData, cbFunction){
 
 }
 
-function requestWeatherInfo(latlng)
-{
-    // var currentWeather;
-    // currentWeather = get('http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat=' + latlng.lat + '&lon='+latlng.lng);
+function requestWeatherInfo(latlng) {
     var url;
-    // url = 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat=' + latlng.lat + '&lon='+latlng.lng;
-    // var currentWeather = JSON.parse(request('GET', url).body.toString('utf-8'));
-    // console.log(currentWeather);
-    url = 'http://api.openweathermap.org/data/2.5/forecast/?appid=7b6e364a6ea88bdfd9ab285f380cb898&type=hour&lat=' + latlng.lat + '&lon='+latlng.lng;
-    console.log(url);
-    var weatherAtSunrise = JSON.parse(request('GET', url).body.toString('utf-8'));
-    console.log(util.inspect(weatherAtSunrise,false,null));
+    url = 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat=' + latlng.lat + '&lon=' + latlng.lng;
+    var currentWeather = JSON.parse(request('GET', url).body.toString('utf-8'));
+    console.log(currentWeather);
+    //hack here. sunrise and sunset temp is mocked up
+    var val = { now: { temp: currentWeather.main.temp - k, conditions: currentWeather.weather[0].main }, sunrise: { time: getTime(currentWeather.sys.sunrise * 1000), temp: currentWeather.main.temp - k - 1, conditions: currentWeather.weather[0].main }, sunset: { time: getTime(currentWeather.sys.sunset * 1000), temp: currentWeather.main.temp - k - 2, conditions: currentWeather.weather[0].main } };
+    console.log(val);
+    return val;
 }
-
-
-requestWeatherInfo({lat:48.740356600365, lng:9.10019824732889});
 
 app.get("/api/stop", (req, res) => {
     requestStopInfo(
@@ -132,12 +127,8 @@ app.get("/api/stop", (req, res) => {
     ).then(value =>{
 
         value.timetable = value.timetable.slice(0, 4);
-        value["weather"] = {
-            now: { temp: 21 },
-            sunrise: { time: '0:36', temp: 16 },
-            sunset: { time: '18:36', temp: 13 }
-        };
-        console.log(value);
+        value["weather"] = requestWeatherInfo({lat:GTFS_STOPS[0].stop_lat, lng:GTFS_STOPS[0].stop_lon});
+        // console.log(value);
         res.send(value);
 
     });
@@ -159,4 +150,9 @@ function getDate() {
     var month = date.getMonth();
     var year = date.getFullYear();
     return year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds;
+}
+
+function getTime(unixts){
+    var date = moment(unixts).utcOffset(+2).format("HH:mm");// new Date(unixts);
+    return date;
 }
