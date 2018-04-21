@@ -4,7 +4,7 @@ import moment from 'moment';
 import { generateObj } from './src/utils/svgUtil';
 import { requestStopInfo, requestWeatherInfo } from './src/utils/triasUtil';
 
-const httpPort = process.env.PORT || 8080;
+const httpPort = process.env.PORT || 8086;
 const app = express();
 
 const GTFS_STOPS = [{
