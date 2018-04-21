@@ -61,7 +61,7 @@ function requestStopInfo(reqData, cbFunction){
             'Content-Length': Buffer.byteLength(body)
         }
     };
-    var promise1 = new Promise(function(resolve, reject) {
+    var httpPromise = new Promise(function(resolve, reject) {
         var req = http.request( postRequest, function( res )    {
 
             console.log( res.statusCode );
@@ -101,7 +101,7 @@ function requestStopInfo(reqData, cbFunction){
              req.end();
                 
     });
-    return promise1;  
+    return httpPromise;  
 
 }
 
@@ -109,14 +109,18 @@ function requestWeatherInfo(latlng)
 {
     // var currentWeather;
     // currentWeather = get('http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat=' + latlng.lat + '&lon='+latlng.lng);
-    var currentWeather = JSON.parse(request('GET', 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat=' + latlng.lat + '&lon='+latlng.lng).body.toString('utf-8'));
-    console.log(currentWeather);
-    var weatherAtSunrise = JSON.parse(request('GET', 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat=' + latlng.lat + '&lon='+latlng.lng).body.toString('utf-8'));
-    console.log(weatherAtSunrise);
+    var url;
+    // url = 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat=' + latlng.lat + '&lon='+latlng.lng;
+    // var currentWeather = JSON.parse(request('GET', url).body.toString('utf-8'));
+    // console.log(currentWeather);
+    url = 'http://api.openweathermap.org/data/2.5/forecast/?appid=7b6e364a6ea88bdfd9ab285f380cb898&type=hour&lat=' + latlng.lat + '&lon='+latlng.lng;
+    console.log(url);
+    var weatherAtSunrise = JSON.parse(request('GET', url).body.toString('utf-8'));
+    console.log(util.inspect(weatherAtSunrise,false,null));
 }
 
 
-// requestWeatherInfo({lat:48.740356600365, lng:9.10019824732889});
+requestWeatherInfo({lat:48.740356600365, lng:9.10019824732889});
 
 app.get("/api/stop", (req, res) => {
     requestStopInfo(
