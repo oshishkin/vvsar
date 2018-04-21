@@ -30,8 +30,14 @@ app.get("/api/stop", (req, res) => {
             maxTimeToBus = maxTimeToBus<current.timetobus?current.timetobus:maxTimeToBus;
             return current;
         });
-        value.timetable = value.timetable.map(current=>{
+        var colors=['#05ff46','#ffd905','ff7805','05ecff'];
+
+        value.timetable = value.timetable.map(function(current,idx){
             current.progress = 100-current.timetobus/maxTimeToBus*100;
+            current.maxTime = maxTimeToBus;
+            current.type = current.lineType;
+            current.departureTime = current.timetobus;
+            current.lineColor = colors[idx];
             return current;
         });
 
@@ -56,12 +62,14 @@ app.get("/test.svg", (req, res) => {
             maxTimeToBus = maxTimeToBus<current.timetobus?current.timetobus:maxTimeToBus;
             return current;
         });
-        value.timetable = value.timetable.map((current)=>{
+        var colors=['#05ff46','#ffd905','ff7805','05ecff'];
+
+        value.timetable = value.timetable.map(function(current,idx){
             current.progress = 100-current.timetobus/maxTimeToBus*100;
             current.maxTime = maxTimeToBus;
             current.type = current.lineType;
             current.departureTime = current.timetobus;
-            current.lineColor = '#2bfd53';
+            current.lineColor = colors[idx];
             return current;
         });
 
