@@ -1,0 +1,43 @@
+<!doctype HTML>
+<html>
+<head>
+    <script src="https://aframe.io/releases/0.8.2/aframe.min.js"></script>
+</head>
+<body style='margin : 0px; overflow: hidden;'>
+    <script src="/js/aframe-ar.js"></script>
+    <a-scene arjs="debugUIEnabled: false" id="scene">
+        <a-assets id="assets">
+            
+        </a-assets>
+        <a-marker preset="he" id="marker">
+            <a-plane position="0 0 -1" rotation="-90 0 0" width="2" id="plane" height="3.5"></a-plane>
+        </a-marker>
+    </a-scene>
+</body>
+  <script>
+    function contentToAR(innerText) {
+        fetch('/test.svg?name=aidar').then((res) => {
+            return res.blob();
+        }).then((blob) => {
+            var newImg = document.createElement('img'),
+            url = URL.createObjectURL(blob);
+
+            newImg.onload = function() {
+                // no longer need to read the blob so it's revoked
+                URL.revokeObjectURL(url);
+            };
+
+            newImg.src = url;
+            newImg.id = Math.random().toString(36).substr(2, 16);
+            
+            var asset = document.getElementById('assets');
+            asset.appendChild(newImg);
+            
+            document.getElementById('plane').setAttribute('src', '#'+newImg.id);
+        }).catch((error) => {
+            alert(error);
+        });
+    }
+    requestAnimationFrame(function() {contentToAR()});
+  </script>
+</html>
