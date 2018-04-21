@@ -1,65 +1,12 @@
-var body = '<?xml version="1.0" encoding="UTF-8"?>'+
-'<Trias version="1.1" xmlns="http://www.vdv.de/trias" xmlns:siri="http://www.siri.org.uk/siri">'+
-'<ServiceRequest>'+
-'<siri:RequestTimestamp>2018-04-20T20:30:00</siri:RequestTimestamp>'+
-'<siri:RequestorRef>fraunhofer</siri:RequestorRef>'+
-'<RequestPayload>'+
-'<StopEventRequest>'+
-'<Location><LocationRef>'+
-//'<StopPointRef>de:08111:6008:1:1</StopPointRef>'+  //Uni
-'<StopPointRef>de:08111:6018:0:4</StopPointRef>'+    // Nobelstr
-
-//'<GeoPosition>'+
-//'<Longitude>9.15949</Longitude>'+
-//'<Latitude>48.77080</Latitude>'+
-
-//'<Longitude>9.10583696296453</Longitude>'+
-//'<Latitude>48.7450905386822</Latitude>'+
-//'</GeoPosition>'+
-//'<LocationName>'+
-//'<Text>Wangener-/Landhausstraße</Text>'+
-//'</LocationName>'+
-'</LocationRef></Location>'+
-'<Params>'+
-'<NumberOfResults>4</NumberOfResults>'+
-'<StopEventType>departure</StopEventType>'+
-//'<PtModeFilter>Bus</PtModeFilter>'+
-//'<BusSubmode>localBus</BusSudmode>'+
-'</Params>'+
-'</StopEventRequest>'+
-'</RequestPayload>'+
-'</ServiceRequest>'+
-'</Trias>';
-
-
 let http = require('http');
+let json2xml = require('json2xml'); 
 let xml2js = require('xml2js');
 var parser = new xml2js.Parser();
 const util = require('util')
-
-var postRequest = {
-    host: "efastatic.vvs.de",
-    path: "/makeathon/trias",
-    port: 80,
-    method: "POST",
-    headers: {
-        'Cookie': "cookie",
-        'User-Agent': 'Fiddler',
-        'Content-Type': 'text/xml',
-        'Content-Length': Buffer.byteLength(body)
-    }
-};
-
-var buffer = "";
-
-
-
-
-
-const express = require('express');
-
+var express = require('express');
+    
 const app = express();
-const json2xml = require('json2xml'); 
+
 
 app.use('/', express.static('public'));
 app.route('/').get(function (req, res) {
@@ -67,38 +14,70 @@ app.route('/').get(function (req, res) {
 });
             
 
-// api sample
-app.get("/api", (req, res) => {
+function requestTriasApi(reqData, cbFunction){
+    var body = json2xml({
+        Trias: {
+            ServiceRequest:{
+                "siri:RequestTimestamp":"2018-04-20T20:30:00",
+                "siri:RequestorRef":"fraunhofer",
+                RequestPayload:{
+                    StopEventRequest:{
+                        Location:reqData,
+                        Params:{
+                            NumerOfResults:20,
+                            StopEventType:"departure",
+                            PtModeFilter:"Bus",
+                            BusSubmode:"localBus"
+                        }
+                    }
+                }
+            }
+        
+        },
+        attr: {
+            version: "1.1",
+            xmlns: "http://www.vdv.de/trias",
+            "xmlns:siri": "http://www.siri.org.uk/siri"
+        }
+    }, {
+        attributes_key: 'attr',
+        header: true
+    }); 
+    
+    console.log(body);
+    var postRequest = {
+        host: "efastatic.vvs.de",
+        path: "/makeathon/trias",
+        port: 80,
+        method: "POST",
+        headers: {
+            'Cookie': "cookie",
+            'User-Agent': 'Fiddler',
+            'Content-Type': 'text/xml',
+            'Content-Length': Buffer.byteLength(body)
+        }
+    };
     var req = http.request( postRequest, function( res )    {
 
-        console.log( res.statusCode );
+    console.log( res.statusCode );
         var buffer = "";
         res.on( "data", function( data ) { buffer = buffer + data; } );
         res.on( "end", function(  ) { 
      
              parser.parseString(buffer, function (err, result) {
      
-                 let resultArr = result.Trias.ServiceDelivery[0].DeliveryPayload[0].StopEventResponse[0].StopEventResult;
-     
-                 for (i=0; i<4; i++)
-                 {
-                     
-     
-                     let stopEvent = resultArr[i].StopEvent[0];
-                     let stopData = stopEvent.ThisCall[0].CallAtStop;
-                     let serviceData = stopEvent.Service[0];
-     
-                     //console.log(util.inspect(serviceData,false, null));
-     
-                     console.log(">>>>>");
-                     console.log("Stop Name: "+stopData[0].StopPointName[0].Text);
-                     console.log("Departure time: "+stopData[0].ServiceDeparture[0].TimetabledTime);
-                     console.log("Linie Name: "+serviceData.Mode[0].Name[0].Text+" "+serviceData.PublishedLineName[0].Text);
-                     console.log("Linie Description: "+serviceData.RouteDescription[0].Text);
-     
-                 }
-     
-                 console.log('Done');
+                let resultArr = result.Trias.ServiceDelivery[0].DeliveryPayload[0].StopEventResponse[0].StopEventResult;
+                var mappedResult = resultArr.map(function(current){
+                    return {
+                        nextStopName: current.StopEvent[0].ThisCall[0].CallAtStop[0].StopPointName[0].Text[0],
+                        departureTime: current.StopEvent[0].ThisCall[0].CallAtStop[0].ServiceDeparture[0].TimetabledTime[0],
+                        lineType:current.StopEvent[0].Service[0].Mode[0].Name[0].Text[0],
+                        lineName:current.StopEvent[0].Service[0].PublishedLineName[0].Text[0],
+                        routeDescription:current.StopEvent[0].Service[0].RouteDescription[0].Text[0]
+                    };
+                });
+                console.log("Stop event=="+util.inspect(mappedResult,false, null));
+                cbFunction(mappedResult);
              });   
      
      
@@ -112,25 +91,17 @@ app.get("/api", (req, res) => {
      });
      
      req.write( body );
-     req.end();
-     
-         
 
-    // console.log(json2xml({
-    //     Trias: {
-    //         q: 1
-        
-    //     },
-    //     attr: {
-    //         version: "1.1",
-    //         xmlns: "http://www.vdv.de/trias",
-    //         "xmlns:siri": "http://www.siri.org.uk/siri"
-    //     }
-    // }, {
-    //     attributes_key: 'attr',
-    //     header: true
-    // }));
-    res.send({data: 12345})
+}
+
+app.get("/api", (req, res) => {
+    requestTriasApi({LocationRef:{
+        StopPointRef:"de:08111:6018:0:4"
+    }},function(value){
+        console.log(value);
+        res.send(value)
+    });     
+    
 });
 
 app.use(express.static('public'));
@@ -144,11 +115,11 @@ app.get("/renderimage.svg", (req, res) => {
                     <em>I</em>
                     like
                     <span style="color: white; text-shadow: 0 0 2px black;" id="like">cheese</span>
-                </div>
+                </div> 
             </foreignObject>
         </svg>`)
 })
 
-app.listen(8080, () => {
-    console.info("App is running at port 8080");
+app.listen(80, () => {
+    console.info("App is running at port 80"); 
 })
