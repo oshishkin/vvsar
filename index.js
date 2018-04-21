@@ -26,7 +26,7 @@ app.get("/api/stop", (req, res) => {
         let maxTimeToBus = 1;
         value.timetable = value.timetable.slice(0, 4);
         value.timetable = value.timetable.map(current=>{
-            current.timetobus = moment(moment(current.departureTime)-now).format('mm');
+            current.timetobus = Math.floor(moment(moment(current.departureTime)-now)/1000/60);
             maxTimeToBus = maxTimeToBus<current.timetobus?current.timetobus:maxTimeToBus;
             return current;
         });
@@ -52,7 +52,7 @@ app.get("/test.svg", (req, res) => {
         let maxTimeToBus = 1;
         value.timetable = value.timetable.slice(0, 4);
         value.timetable = value.timetable.map((current)=>{
-            current.timetobus = moment(moment(current.departureTime)-now).format('mm');
+            current.timetobus = Math.floor(moment(moment(current.departureTime)-now)/1000/60);
             maxTimeToBus = maxTimeToBus<current.timetobus?current.timetobus:maxTimeToBus;
             return current;
         });
