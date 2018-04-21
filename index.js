@@ -4,7 +4,6 @@ let xml2js = require('xml2js');
 var parser = new xml2js.Parser();
 const util = require('util')
 var express = require('express');
-    
 const app = express();
 
 
@@ -73,11 +72,13 @@ function requestTriasApi(reqData, cbFunction){
                         departureTime: current.StopEvent[0].ThisCall[0].CallAtStop[0].ServiceDeparture[0].TimetabledTime[0],
                         lineType:current.StopEvent[0].Service[0].Mode[0].Name[0].Text[0],
                         lineName:current.StopEvent[0].Service[0].PublishedLineName[0].Text[0],
-                        routeDescription:current.StopEvent[0].Service[0].RouteDescription[0].Text[0]
+                        routeDescription:current.StopEvent[0].Service[0].RouteDescription[0].Text[0],
+                        startName:current.StopEvent[0].Service[0].OriginText[0].Text[0],
+                        stopName:current.StopEvent[0].Service[0].DestinationText[0].Text[0]
                     };
                 });
-                console.log("Stop event=="+util.inspect(mappedResult,false, null));
-                cbFunction(mappedResult);
+                console.log("Stop event=="+util.inspect(resultArr,false, null));
+                cbFunction({timetable:mappedResult});
              });   
      
      
