@@ -15,15 +15,15 @@
     </a-scene>
 </body>
 <script>
-    (function init() {
-        function contentToAR(innerText) {
+    (() => {
+        function contentToAR() {
             fetch('/test.svg').then((res) => {
                 return res.blob();
             }).then((blob) => {
-                var newImg = document.createElement('img'),
+                const newImg = document.createElement('img'),
                 url = URL.createObjectURL(blob);
 
-                newImg.onload = function() {
+                newImg.onload = () => {
                     // no longer need to read the blob so it's revoked
                     URL.revokeObjectURL(url);
                 };
@@ -31,7 +31,7 @@
                 newImg.src = url;
                 newImg.id = Math.random().toString(36).substr(2, 16);
                 
-                var asset = document.getElementById('assets');
+                const asset = document.getElementById('assets');
                 asset.appendChild(newImg);
                 
                 document.getElementById('plane').setAttribute('src', '#'+newImg.id);
@@ -39,7 +39,7 @@
                 alert(error);
             });
         }
-        requestAnimationFrame(function() {contentToAR()});
+        requestAnimationFrame(contentToAR);
     })()
   </script>
 </html>
