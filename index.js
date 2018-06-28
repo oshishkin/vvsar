@@ -24,6 +24,7 @@ app.get("/api/stop", (req, res) => {
     }).then(value =>{
         const now = moment();
         let maxTimeToBus = 1;
+		value.refreshRate=1;
         value.timetable = value.timetable.slice(0, 4);
         value.timetable = value.timetable.map(current=>{
             current.timetobus = Math.floor(moment(moment(current.departureTime)-now)/1000/60);
@@ -31,7 +32,6 @@ app.get("/api/stop", (req, res) => {
             return current;
         });
         var colors=['#05ff46','#ffd905','#ff7805','#05ecff','#00f0ba','#00f0ba','#00f0ba','#00f0ba'];
-
         value.timetable = value.timetable.map(function(current,idx){
             current.progress = 100-current.timetobus/maxTimeToBus*100;
             current.maxTime = maxTimeToBus;
