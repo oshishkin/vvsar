@@ -1,0 +1,22 @@
+POST http://efastatic.vvs.de/makeathon/trias HTTP/1.1
+User-Agent: Fiddler
+Host: efastatic.vvs.de
+content-type: text/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Trias version="1.1" xmlns="http://www.vdv.de/trias" xmlns:siri="http://www.siri.org.uk/siri">
+	<ServiceRequest>
+		<siri:RequestTimestamp>2017-11-20T20:56:00Z</siri:RequestTimestamp>
+		<siri:RequestorRef>fraunhofer</siri:RequestorRef>
+		<RequestPayload>
+			<LocationInformationRequest>
+				<InitialInput>
+					<LocationName>Obere Ziegelei</LocationName>
+				</InitialInput>
+				<Restrictions>
+					<IncludePtModes>true</IncludePtModes>
+				</Restrictions>
+			</LocationInformationRequest>
+		</RequestPayload>
+	</ServiceRequest>
+</Trias>
