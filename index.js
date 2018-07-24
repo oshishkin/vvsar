@@ -43,7 +43,7 @@ app.get("/api/stop", (req, res) => {
     }).then(value =>{
         const now = moment();
         let maxTimeToBus = 1;
-		value.refreshRate=1;
+		value.refreshRate = 1;
         value.timetable = value.timetable.slice(0, 4);
         value.timetable = value.timetable.map(current=>{
             current.timetobus = Math.floor(moment(moment(current.departureTime)-now)/1000/60);
@@ -80,7 +80,7 @@ app.post("/api/stop", (req, res) => {
     }).then(value =>{
         const now = moment();
         let maxTimeToBus = 1;
-		value.refreshRate=1;
+		value.refreshRate = 1;
         value.timetable = value.timetable.slice(0, 4);
         value.timetable = value.timetable.map(current=>{
             current.timetobus = Math.floor(moment(moment(current.departureTime)-now)/1000/60);
