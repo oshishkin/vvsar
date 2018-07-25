@@ -95,31 +95,33 @@ export function requestStopInfo(reqData, cbFunction){
 }
 
 export function requestWeatherInfo(latlng) {
-    var url;
-    //url = 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&units=metric&lat=' + latlng.lat + '&lon=' + latlng.lng;
-    url = 'http://api.openweathermap.org/data/2.5/forecast?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat='+latlng.lat+'&lon='+latlng.lng+'&units=metric&cnt=8'
-    var currentWeather = JSON.parse(request('GET', url).body.toString('utf-8'));
-    console.log(currentWeather);
+    var tzOffset=2;
+    var weatherUrl = 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&units=metric&lat=' + latlng.lat + '&lon=' + latlng.lng;
+    var forecastUrl = 'http://api.openweathermap.org/data/2.5/forecast?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat='+latlng.lat+'&lon='+latlng.lng+'&units=metric&cnt=8';
+    var currentWeather = JSON.parse(request('GET', weatherUrl).body.toString('utf-8'));
+    var forecastWeather = JSON.parse(request('GET', forecastUrl).body.toString('utf-8'));
+    
+    //console.log(currentWeather);
     var val = { 
                 now: { temp: '-', conditions: 'Clear' }, 
                 sunrise: { time: 0, temp: '-', conditions: 'Clear' }, 
                 sunset: { time: 0, temp: '-', conditions: 'Clear' } 
             };
+    
+            if(currentWeather && currentWeather.weather && currentWeather.weather.length>0){
+        val.now = { temp: currentWeather.main.temp, conditions: currentWeather.weather[0].main };
+    }
 
-    if(currentWeather && currentWeather.list && currentWeather.list.length>0){
-        var nowValues = currentWeather.list[0];
-        var d1 = currentWeather.list.reduce((prev, current) => (prev.main.temp > current.main.temp) ? prev : current);
-        var d2 = currentWeather.list.reduce((prev, current) => (prev.main.temp <= current.main.temp) ? prev : current);
+    if(forecastWeather && forecastWeather.list && forecastWeather.list.length>0){
+        var d1 = forecastWeather.list.reduce((prev, current) => (prev.main.temp > current.main.temp) ? prev : current);
+        var d2 = forecastWeather.list.reduce((prev, current) => (prev.main.temp <= current.main.temp) ? prev : current);
         if(d1.dt>d2.dt){
             const temp = d1;
             d1 = d2;
             d2 = temp;
         }
-        val = {
-            now: {temp: nowValues.main.temp, conditions: nowValues.weather[0].main},
-            sunrise: { time: getTimeByOffset(d1.dt * 1000, 0), temp: d1.main.temp, conditions: d1.weather[0].main }, 
-            sunset:  { time: getTimeByOffset(d2.dt * 1000, 0), temp: d2.main.temp, conditions: d2.weather[0].main }
-        }
+        val.sunrise = { time: getTimeByOffset(d1.dt * 1000, tzOffset), temp: d1.main.temp, conditions: d1.weather[0].main+(d1.sys.pod=='n' ? '-Night' : '') };
+        val.sunset = { time: getTimeByOffset(d2.dt * 1000, tzOffset), temp: d2.main.temp, conditions: d2.weather[0].main+(d2.sys.pod=='n' ? '-Night' : '')};
         //var val = { now: { temp: currentWeather.main.temp, conditions: currentWeather.weather[0].main }, sunrise: { time: getTime(currentWeather.sys.sunrise * 1000), temp: currentWeather.main.temp - 1, conditions: currentWeather.weather[0].main }, sunset: { time: getTime(currentWeather.sys.sunset * 1000), temp: currentWeather.main.temp - 2, conditions: currentWeather.weather[0].main } };
     }
     console.log(val);
