@@ -108,8 +108,8 @@ export function requestWeatherInfo(latlng) {
                 sunset: { time: 0, temp: '-', conditions: 'Clear' } 
             };
     
-            if(currentWeather && currentWeather.weather && currentWeather.weather.length>0){
-        val.now = { temp: currentWeather.main.temp, conditions: currentWeather.weather[0].main };
+    if(currentWeather && currentWeather.weather && currentWeather.weather.length>0){
+        val.now = { temp: Math.round(currentWeather.main.temp), conditions: currentWeather.weather[0].main };
     }
 
     if(forecastWeather && forecastWeather.list && forecastWeather.list.length>0){
@@ -120,8 +120,8 @@ export function requestWeatherInfo(latlng) {
             d1 = d2;
             d2 = temp;
         }
-        val.sunrise = { time: getTimeByOffset(d1.dt * 1000, tzOffset), temp: d1.main.temp, conditions: d1.weather[0].main+(d1.sys.pod=='n' ? '-Night' : '') };
-        val.sunset = { time: getTimeByOffset(d2.dt * 1000, tzOffset), temp: d2.main.temp, conditions: d2.weather[0].main+(d2.sys.pod=='n' ? '-Night' : '')};
+        val.sunrise = { time: getTimeByOffset(d1.dt * 1000, tzOffset), temp: Math.round(d1.main.temp), conditions: d1.weather[0].main};//+(d1.sys.pod=='n' ? '-Night' : '') };
+        val.sunset = { time: getTimeByOffset(d2.dt * 1000, tzOffset), temp: Math.round(d2.main.temp), conditions: d2.weather[0].main};//+(d2.sys.pod=='n' ? '-Night' : '')};
         //var val = { now: { temp: currentWeather.main.temp, conditions: currentWeather.weather[0].main }, sunrise: { time: getTime(currentWeather.sys.sunrise * 1000), temp: currentWeather.main.temp - 1, conditions: currentWeather.weather[0].main }, sunset: { time: getTime(currentWeather.sys.sunset * 1000), temp: currentWeather.main.temp - 2, conditions: currentWeather.weather[0].main } };
     }
     console.log(val);
