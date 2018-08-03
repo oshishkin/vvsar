@@ -4,94 +4,110 @@ import json2xml from 'json2xml';
 import xml2js from 'xml2js';
 import util from 'util';
 import moment from 'moment';
+import {
+    getDbRoutes
+} from './dbUtil';
+import {
+    getLogger
+} from 'log4js';
 
-var parser = new xml2js.Parser();
+const log = getLogger('triasUtil.js');
 
-export function requestStopInfo(reqData, cbFunction){
-    var body = json2xml({
-        Trias: {
-            ServiceRequest:{
-                "siri:RequestTimestamp":getDate(),
-                "siri:RequestorRef":"fraunhofer",
-                RequestPayload:{
-                    StopEventRequest:{
-                        Location:reqData,
-                        Params:{
-                            NumerOfResults:20,
-                            StopEventType:"departure",
-                            PtModeFilter:"Bus",
-                            BusSubmode:"localBus"
-                        }
-                    }
-                }
+
+const xmlToJSON = async function (xml) {
+    var xmlParser = new xml2js.Parser();
+    return new Promise(function (resolve, reject) {
+        xmlParser.parseString(xml, function (err, result) {
+            resolve(result);
+        });
+    });
+}
+
+export async function requestStopsInfo(stops) {
+    var timetable = [];
+    // console.log(stops);
+    // var tt,
+    var i;
+    for (i = 0; i < stops.length; i++) {
+        var tt = await requestStopInfo(stops[i]);
+        // console.log(tt);
+        timetable = timetable.concat(tt.timetable);
+    }
+    timetable = timetable
+        //sort by departure time
+        .sort(function (a, b) {
+            return a.departureTimeUnix - b.departureTimeUnix
+        })
+        //leave just 20 buses
+        .reduce((acc, s, index) => {
+            if (index < 20) {
+                acc.push(s);
             }
-        
-        },
-        attr: {
-            version: "1.1",
-            xmlns: "http://www.vdv.de/trias",
-            "xmlns:siri": "http://www.siri.org.uk/siri"
-        }
-    }, {
-        attributes_key: 'attr',
-        header: true
-    }); 
-    
-    console.log(body);
+            return acc;
+        }, []);
+    var resp = {
+        stationName: stops[0].stop_name,
+        timetable: timetable
+    };
+    log.info("requestStopsInfo num of results=",resp.timetable.length);
+    log.debug("requestStopsInfo ",resp);
+    return resp;
+}
+
+async function requestStopInfo(stop) {
+    var body = buildTriasRequest(stop);
+    log.debug("Get stop schedule for:", stop);
     var postRequest = {
         host: "efastatic.vvs.de",
         path: "/makeathon/trias",
         port: 80,
         method: "POST",
         headers: {
-            'Cookie': "cookie",
+            'Cookie': "MOAR cookies!!! O_o",
             'User-Agent': 'Fiddler',
             'Content-Type': 'text/xml',
             'Content-Length': Buffer.byteLength(body)
         }
     };
-    var httpPromise = new Promise(function(resolve, reject) {
-        var req = http.request( postRequest, function( res )    {
+    var resp = request('POST', "http://efastatic.vvs.de/makeathon/trias", {
+        headers: {
 
-            console.log( res.statusCode );
-                var buffer = "";
-                res.on( "data", function( data ) { buffer = buffer + data; } );
-                res.on( "end", function(  ) { 
-             
-                     parser.parseString(buffer, function (err, result) {
-             
-                        let resultArr = result.Trias.ServiceDelivery[0].DeliveryPayload[0].StopEventResponse[0].StopEventResult;
-                        var mappedResult = resultArr.map(function(current){
-                            return {
-                                // nextStopName: current.StopEvent[0].ThisCall[0].CallAtStop[0].StopPointName[0].Text[0],
-                                departureTime: current.StopEvent[0].ThisCall[0].CallAtStop[0].ServiceDeparture[0].TimetabledTime[0],
-                                lineType:current.StopEvent[0].Service[0].Mode[0].Name[0].Text[0],
-                                lineName:current.StopEvent[0].Service[0].PublishedLineName[0].Text[0],
-                                routeDescription:current.StopEvent[0].Service[0].RouteDescription[0].Text[0],
-                                startName:current.StopEvent[0].Service[0].OriginText[0].Text[0],
-                                stopName:current.StopEvent[0].Service[0].DestinationText[0].Text[0]
-                            };
-                        });
-                        // console.log("Stop event=="+util.inspect(mappedResult,false, null));
-                        resolve({stationName:resultArr[0].StopEvent[0].ThisCall[0].CallAtStop[0].StopPointName[0].Text[0], timetable:mappedResult});
-                     });   
-             
-             
-                     //console.log( buffer ); 
-                 } );
-             
-             });
-             
-             req.on('error', function(e) {
-                 console.log('problem with request: ' + e.message);
-             });
-             
-             req.write( body );
-             req.end();
-                
+            'Cookie': "MOAR cookies!!! O_o",
+            'User-Agent': 'Fiddler',
+            'Content-Type': 'text/xml',
+            'Content-Length': Buffer.byteLength(body)
+        },
+        'body': body
+
+    }).body.toString('utf-8');
+    let resultArr = (await xmlToJSON(resp)).Trias.ServiceDelivery[0].DeliveryPayload[0].StopEventResponse[0].StopEventResult;
+
+    const allRoutes = await getDbRoutes();
+
+    var mappedResult = resultArr.map(function (current) {
+        return {
+            departureTime: current.StopEvent[0].ThisCall[0].CallAtStop[0].ServiceDeparture[0].TimetabledTime[0],
+            departureTimeUnix: moment(current.StopEvent[0].ThisCall[0].CallAtStop[0].ServiceDeparture[0].TimetabledTime[0]).unix(),
+            lineType: current.StopEvent[0].Service[0].Mode[0].Name[0].Text[0],
+            lineName: current.StopEvent[0].Service[0].PublishedLineName[0].Text[0],
+            routeDescription: current.StopEvent[0].Service[0].RouteDescription[0].Text[0],
+            startName: current.StopEvent[0].Service[0].OriginText[0].Text[0],
+            stopName: current.StopEvent[0].Service[0].DestinationText[0].Text[0],
+            lineColor: allRoutes.reduce((acc, curr) => {
+                if (curr.linename == current.StopEvent[0].Service[0].PublishedLineName[0].Text[0]) {
+                    return curr.color;
+                } else {
+                    return acc;
+                }
+
+            }, "#00FF00")
+        };
     });
-    return httpPromise;  
 
+    return {
+        stationName: resultArr[0].StopEvent[0].ThisCall[0].CallAtStop[0].StopPointName[0].Text[0],
+        timetable: mappedResult
+    };
 }
 
 export function requestWeatherInfo(latlng) {
@@ -124,7 +140,6 @@ export function requestWeatherInfo(latlng) {
         val.sunset = { time: getTimeByOffset(d2.dt * 1000, tzOffset), temp: Math.round(d2.main.temp), conditions: d2.weather[0].main+(d2.sys.pod=='n' ? '-Night' : '')};
         //var val = { now: { temp: currentWeather.main.temp, conditions: currentWeather.weather[0].main }, sunrise: { time: getTime(currentWeather.sys.sunrise * 1000), temp: currentWeather.main.temp - 1, conditions: currentWeather.weather[0].main }, sunset: { time: getTime(currentWeather.sys.sunset * 1000), temp: currentWeather.main.temp - 2, conditions: currentWeather.weather[0].main } };
     }
-    console.log(val);
     return val;
 }
 
@@ -139,11 +154,51 @@ export function getDate() {
     return year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds;
 }
 
-export function getTime(unixts){
+export function getTime(unixts) {
     return getTimeByOffset(unixts, 2);
 }
 
-export function getTimeByOffset(unixts, offset){
-    var date = moment(unixts).utcOffset(offset).format("HH:mm");// new Date(unixts);
+export function getTimeByOffset(unixts, offset) {
+    var date = moment(unixts).utcOffset(offset).format("HH:mm"); // new Date(unixts);
     return date;
 }
+
+
+
+const buildTriasRequest = (stop) => {
+    var req = {
+        attr: {
+            version: "1.1",
+            xmlns: "http://www.vdv.de/trias",
+            "xmlns:siri": "http://www.siri.org.uk/siri"
+        },
+        Trias: {
+            ServiceRequest: {
+                "siri:RequestTimestamp": getDate(),
+                "siri:RequestorRef": "fraunhofer",
+                RequestPayload: {
+                    StopEventRequest: {
+                        Location: {
+                            LocationRef: {
+                                StopPointRef: stop.stop_id
+                            }
+                        },
+                        Params: {
+                            NumberOfResults: 10,
+                            StopEventType: "departure",
+                            PtModeFilter: "Bus",
+                            BusSubmode: "localBus"
+                        }
+                    }
+                }
+            }
+        }
+    };
+    var body = json2xml(req, {
+        attributes_key: 'attr',
+        header: true
+    });
+
+    // console.log(body);
+    return body;
+};

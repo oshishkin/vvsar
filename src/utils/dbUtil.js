@@ -8,14 +8,24 @@ const pool = new Pool({
 })
 
 //  const dbStops = await .rows;
-//   console.log( dbStops);
-// export var data;
-var dbStops;
-const getDbStops = async () => {
-    if(dbStops == undefined){
-        dbStops = (await pool.query('SELECT STOP_ID,STOP_NAME,STOP_LAT as lat,STOP_LON as lng from GTFS_STOPS')).rows;
+    //   console.log( dbStops);
+    // export var data;
+    var dbStops;
+    export const getDbStops = async () => {
+        if(dbStops == undefined){
+            dbStops = (await pool.query('SELECT STOP_ID,STOP_NAME,STOP_LAT as lat,STOP_LON as lng from GTFS_STOPS')).rows;
+        }
+        return dbStops;
     }
-    return dbStops;
-}
+        
+    getDbStops();
 
-getDbStops().then(ok=>{console.log(ok)});
+    var dbRoutes;
+    export const getDbRoutes = async () => {
+        if(dbRoutes == undefined){
+            dbRoutes = (await pool.query('SELECT ROUTE_SHORT_NAME as lineName,\'#\'||ROUTE_COLOR as color from GTFS_ROUTES')).rows;
+        }
+        return dbRoutes;
+    }
+        
+    getDbRoutes();
