@@ -1,3 +1,9 @@
+import {
+    getLogger
+} from 'log4js';
+
+const log = getLogger('geoUtil.js');
+
 const coordsUtilsFactory = () => {
     const utils = {
         /**
@@ -26,7 +32,7 @@ const coordsUtilsFactory = () => {
             const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
             const bearing = utils.toDeg(Math.atan2(y, x));
             // console.log(Math.abs(bearing));
-            return Math.abs(bearing);
+            return ((bearing>0?0:360)+bearing);
         },
 
         /**
@@ -62,7 +68,16 @@ const coordsUtils = coordsUtilsFactory();
 export const getClosestStop = (stops, reqCoords) => {
     return stops
         // filter by delta in bearings < 160 / 2
-        .filter((s) => Math.abs(coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng) - reqCoords.heading) <= (((reqCoords.heading == 0) ? 360 : 160) / 2))
+        .filter((s) =>{ 
+            var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
+            var userHeading = reqCoords.heading;
+            var a1 = Math.abs(stopHeading-userHeading);
+            a1 = a1>180?(360-a1):a1;
+            
+            log.debug(a1);
+            return a1 <= (((reqCoords.heading == 0) ? 360 : 160) / 2);
+        
+        })
         // add distance from point to each stop
         .map((s) => {
             // console.log(coordsUtils().distance(s.lat, s.lng, lat, lng));
