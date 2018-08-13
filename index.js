@@ -90,8 +90,8 @@ function getReqCoords(req) {
 async function getClosestStops(reqCoords) {
     const allStops = await getDbStops();
 
-    const filteredStops = [{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
-    //getClosestStop(allStops, reqCoords);
+    const filteredStops = //[{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
+    getClosestStop(allStops, reqCoords);
     log.info("getClosestStops",filteredStops);
     // const value = await requestStopsInfo(filteredStops); 
     return filteredStops;

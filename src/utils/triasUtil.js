@@ -46,7 +46,7 @@ export async function requestStopsInfo(stops) {
             return acc;
         }, []);
     var resp = {
-        stationName: stops[0].stop_name,
+        stationName: stops[0]==undefined?'':stops[0].stop_name,
         timetable: timetable
     };
     log.info("requestStopsInfo num of results=",resp.timetable.length);
