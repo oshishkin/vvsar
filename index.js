@@ -41,7 +41,7 @@ configure({
     categories: {
         default: {
             appenders: ['out'],
-            level: 'debug'
+            level: 'info'
         }
     }
 });
@@ -64,14 +64,23 @@ app.use(function (req, res, next) {
 });
 
 function getReqCoords(req) {
+    log.info('Query:',req.query);
+    log.info('Body:',req.body);
+    log.info('Headers:',req.headers);
     var reqCoords;
+    var body = req.body;
+    body=body.replace('"latitude"','latitude');body=body.replace('latitude','"latitude"');
+    body=body.replace('"longitude"','longitude');body=body.replace('longitude','"longitude"');
+    body=body.replace('"heading"','heading');body=body.replace('heading','"heading"');
+    body=body.replace('"precision"','precision');body=body.replace('precision','"precision"');
+    
     try {
-        reqCoords = JSON.parse(req.body);
+        reqCoords = JSON.parse(body);
     } catch (error) {
         try {
             reqCoords = JSON.parse(req.query.val);
         } catch (error) {
-            log.error("Error getting coords from request");
+            log.error("Error getting coords from request",error);
         }
     }
     log.info("getReqCoords",reqCoords);
@@ -81,7 +90,8 @@ function getReqCoords(req) {
 async function getClosestStops(reqCoords) {
     const allStops = await getDbStops();
 
-    const filteredStops = getClosestStop(allStops, reqCoords);
+    const filteredStops = [{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
+    //getClosestStop(allStops, reqCoords);
     log.info("getClosestStops",filteredStops);
     // const value = await requestStopsInfo(filteredStops); 
     return filteredStops;
