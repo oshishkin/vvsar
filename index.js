@@ -119,8 +119,8 @@ const compileResponce = async (value) => {
 
     let maxTimeToBus = 1;
     rt = (rt + 1) % 2;
-    //value.refreshRate = 1;
-    value.refreshRate = 1 + rt * 10;
+    value.refreshRate = 3;
+    // value.refreshRate = 1 + rt * 10;
     value.timetable = value.timetable; //.slice(0, 4);
     log.debug("compile responce", value);
     value.timetable = value.timetable.map(current => {
