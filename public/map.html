@@ -17,8 +17,6 @@ function clearMarkers(){
 function showLocalizations() {
     var latitude=55.7875328965814;
     var longitude=49.1810485487428;
-    var heading=213;
-
     var myLatlng = new google.maps.LatLng(latitude, longitude);
     var mapProp = {
                 center:myLatlng,
@@ -28,11 +26,10 @@ function showLocalizations() {
     };
     var map=new google.maps.Map(document.getElementById("googleMap"), mapProp);
     var lastPointsUrl = '/api/lastpoints?cnt='+1;
+    $.ajaxSetup({ cache: false });
     var timer=setInterval(()=>{
-
         $.get(lastPointsUrl, function( data ) {
-            //var points = data;
-            //console.log(points);
+            clearMarkers();
             $.each(data, function(idx, obj) {
                 if(obj && obj.data && obj.data.length>1){
                     console.log(obj.data[1]);
@@ -40,23 +37,21 @@ function showLocalizations() {
                     var lat=requestElement.latitude;
                     var lon=requestElement.longitude;
                     var myLatlng = new google.maps.LatLng(lat, lon);
-                    clearMarkers();
                     var marker = new google.maps.Marker({
                                 position: myLatlng,
                                 map: map,
                                 title: obj.startTime,
                                 icon: {
                                     path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                    scale: 4,
+                                    scale: 5,
                                     fillColor: "blue",
                                     fillOpacity: 0.8,
                                     strokeWeight: 2,
                                     rotation: requestElement.heading
                                 }  
                     });
+                    map.setCenter(myLatlng);
                     markersArray.push(marker);
-                } else {
-                    clearMarkers();
                 }
             });
         }); 

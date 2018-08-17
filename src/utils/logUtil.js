@@ -18,12 +18,13 @@ function requestLogsInfo() {
     var obj = null;
     try {
         var data = fs.readFileSync('vvsar.log', 'utf8');
-        obj = JSON.parse("{\"logs\": ["+data.slice(0, -1)+"]}");
-    } catch(e){}
+        obj = JSON.parse("{\"logs\": ["+data.trim().slice(0, -1)+"]}");
+    } catch(e){
+        console.log(e);
+    }
     result = obj && obj.logs && obj.logs.length>0 ?
         obj.logs.filter((el)=> {
             return el && el.data && el.data.length>0 && el.data[0]=='getReqCoords';
         }) : [];
-    //log.info(result);
     return result;
 }
