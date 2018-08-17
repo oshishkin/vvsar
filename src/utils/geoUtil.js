@@ -133,7 +133,7 @@ export const getClosestStopAlg2 = (stops, reqCoords) => {
         })
         // find closest stop by distance
         .reduce((acc, s) => {
-            if (s.distance < (reqCoords.precision + 10)) {
+            if (s.distance < (reqCoords.precision + 500)) {
                 acc.push(s);
             }
             return acc;
