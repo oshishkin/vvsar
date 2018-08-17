@@ -87,7 +87,7 @@ export const getClosestStop = (stops, reqCoords) => {
         })
         // find closest stop by distance
         .reduce((acc, s) => {
-            if (s.distance < (reqCoords.precision + 500)) {
+            if (s.distance < (reqCoords.precision )) {
                 acc.push(s);
             }
             return acc;
@@ -112,18 +112,10 @@ export const getClosestStop = (stops, reqCoords) => {
  * @return object - stop that is closest to point
  */
 export const getClosestStopAlg2 = (stops, reqCoords) => {
-    return stops
+    reqCoords.sectorFilterEnabled = 0;
+    var filteredStops = 
+    stops
         // filter by delta in bearings < 160 / 2
-        .filter((s) =>{ 
-            var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
-            var userHeading = reqCoords.heading;
-            var a1 = Math.abs(stopHeading-userHeading);
-            a1 = a1>180?(360-a1):a1;
-            
-            log.debug(a1);
-            return a1 <= (((reqCoords.heading == 0) ? 360 : 360) / 2);
-        
-        })
         // add distance from point to each stop
         .map((s) => {
             // console.log(coordsUtils().distance(s.lat, s.lng, lat, lng));
@@ -131,13 +123,14 @@ export const getClosestStopAlg2 = (stops, reqCoords) => {
                 distance: coordsUtils.distance(s.lat, s.lng, reqCoords.latitude, reqCoords.longitude)
             };
         })
-        // find closest stop by distance
+        // filter stops by tolerance
         .reduce((acc, s) => {
-            if (s.distance < (reqCoords.precision + 500)) {
+            if (s.distance < (reqCoords.precision )) {
                 acc.push(s);
             }
             return acc;
         }, [])
+        
         //sort by distance
         .sort((a, b) => {
             return a.distance - b.distance
@@ -149,4 +142,24 @@ export const getClosestStopAlg2 = (stops, reqCoords) => {
             }
             return acc;
         }, []);
+
+        if(filteredStops.lenth>1){
+            var filteredStopsAndHeading = filteredStops
+            .filter((s) =>{ 
+                var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
+                var userHeading = reqCoords.heading;
+                var a1 = Math.abs(stopHeading-userHeading);
+                a1 = a1>180?(360-a1):a1;
+                
+                
+                return a1 <= (((reqCoords.heading == 0) ? 360 : 360) / 2);
+            });
+            log.info("Angle");
+            if (filteredStopsAndHeading.length>=1){
+                reqCoords.sectorFilterEnabled = 1;
+                filteredStops = filteredStopsAndHeading;
+            }
+        }
+
+        return filteredStops;
 };

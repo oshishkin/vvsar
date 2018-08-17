@@ -3,7 +3,7 @@
 import express from 'express';
 import moment from 'moment';
 const asyncHandler = require('express-async-handler');
-
+const coordsTolerance = 10;
 import {
     generateObj
 } from './src/utils/svgUtil';
@@ -96,6 +96,7 @@ function getReqCoords(req) {
             log.error("Error getting coords from request",error);
         }
     }
+    reqCoords.precision = reqCoords.precision+coordsTolerance;
     log.info("getReqCoords",reqCoords);
     return reqCoords;
 }
