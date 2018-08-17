@@ -1,2 +1,2 @@
 #/bin/bash
-yarn start >vvsar.log& disown
+yarn start >vvsar.console.log& disown

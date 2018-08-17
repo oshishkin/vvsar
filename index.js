@@ -28,7 +28,7 @@ import {
 } from 'log4js';
 addLayout('json', function (config) {
     return function (logEvent) {
-        return JSON.stringify(logEvent.startTime)+" ["+logEvent.categoryName+"] ["+logEvent.level.levelStr+"] " +JSON.stringify(logEvent.data);// + config.separator;
+        return JSON.stringify(logEvent) + ",";
     }
 });
 configure({
@@ -39,11 +39,20 @@ configure({
                 type: 'json',
                 separator: ','
             }
+        },
+        file: {
+            type: 'file',
+            filename: 'vvsar.log',
+            layout: {
+                type: 'json',
+                separator: ','
+            }
+
         }
     },
     categories: {
         default: {
-            appenders: ['out'],
+            appenders: ['out', 'file'],
             level: 'info'
         }
     }
@@ -95,18 +104,21 @@ async function getClosestStops(reqCoords) {
 
     const filteredStops = //[{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
     getClosestStop(allStops, reqCoords);
-    log.info("getClosestStops",filteredStops);
+    log.info("getClosestStops",reqCoords,filteredStops);
     // const value = await requestStopsInfo(filteredStops); 
     return filteredStops;
 }
 
 app.use(express.static('public'));
 
+var rt = 0;
 const compileResponce = async (value) => {
     const now = moment();
 
     let maxTimeToBus = 1;
-    value.refreshRate = 1;
+    rt = (rt + 1) % 2;
+    //value.refreshRate = 1;
+    value.refreshRate = 1 + rt * 10;
     value.timetable = value.timetable; //.slice(0, 4);
     log.debug("compile responce", value);
     value.timetable = value.timetable.map(current => {

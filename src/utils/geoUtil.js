@@ -75,7 +75,7 @@ export const getClosestStop = (stops, reqCoords) => {
             a1 = a1>180?(360-a1):a1;
             
             log.debug(a1);
-            return a1 <= (((reqCoords.heading == 0) ? 360 : 160) / 2);
+            return a1 <= (((reqCoords.heading == 0) ? 360 : 360) / 2);
         
         })
         // add distance from point to each stop
@@ -87,7 +87,7 @@ export const getClosestStop = (stops, reqCoords) => {
         })
         // find closest stop by distance
         .reduce((acc, s) => {
-            if (s.distance < (reqCoords.precision + 10)) {
+            if (s.distance < (reqCoords.precision + 500)) {
                 acc.push(s);
             }
             return acc;
