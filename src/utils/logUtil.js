@@ -24,7 +24,7 @@ function requestLogsInfo() {
     }
     result = obj && obj.logs && obj.logs.length>0 ?
         obj.logs.filter((el)=> {
-            return el && el.data && el.data.length>0 && el.data[0]=='getReqCoords';
+            return el && el.data && el.data.length>0 && el.data[0]=='getClosestStops';
         }) : [];
     return result;
 }

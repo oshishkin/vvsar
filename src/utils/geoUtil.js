@@ -104,3 +104,49 @@ export const getClosestStop = (stops, reqCoords) => {
             return acc;
         }, []);
 };
+
+/**
+ * @param {*} stops 
+ * @param {*} point 
+ * @param {*} bearing
+ * @return object - stop that is closest to point
+ */
+export const getClosestStopAlg2 = (stops, reqCoords) => {
+    return stops
+        // filter by delta in bearings < 160 / 2
+        .filter((s) =>{ 
+            var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
+            var userHeading = reqCoords.heading;
+            var a1 = Math.abs(stopHeading-userHeading);
+            a1 = a1>180?(360-a1):a1;
+            
+            log.debug(a1);
+            return a1 <= (((reqCoords.heading == 0) ? 360 : 360) / 2);
+        
+        })
+        // add distance from point to each stop
+        .map((s) => {
+            // console.log(coordsUtils().distance(s.lat, s.lng, lat, lng));
+            return { ...s,
+                distance: coordsUtils.distance(s.lat, s.lng, reqCoords.latitude, reqCoords.longitude)
+            };
+        })
+        // find closest stop by distance
+        .reduce((acc, s) => {
+            if (s.distance < (reqCoords.precision + 10)) {
+                acc.push(s);
+            }
+            return acc;
+        }, [])
+        //sort by distance
+        .sort((a, b) => {
+            return a.distance - b.distance
+        })
+        //leave 14 closest stops
+        .reduce((acc, s, index) => {
+            if (index < 14) {
+                acc.push(s);
+            }
+            return acc;
+        }, []);
+};
