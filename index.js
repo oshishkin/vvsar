@@ -17,6 +17,9 @@ import {
 import {
     getDbStops
 } from './src/utils/dbUtil';
+import {
+    requestLogs
+} from './src/utils/logUtil';
 
 import {
     configure,
@@ -158,6 +161,13 @@ app.get("/api/nearestStops", asyncHandler(async (req, res) => {
     var closestStops = await getClosestStops(reqCoords);
     res.send(closestStops);
 }));
+
+//
+const handleLogsRequest = asyncHandler(async (req, res) => {
+    var value = await requestLogs(req.query.cnt); //.then(value =>{
+    res.send(value);
+});
+app.get("/api/lastpoints", handleLogsRequest);
 
 app.listen(httpPort, () => {
     console.info("App is running at port " + httpPort);

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800' rel='stylesheet' type='text/css'>
+<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyC2bzkxOHWWS6DZnLh3g7lA7nOf48zes_k"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<script>
+var markersArray=[];
+function clearMarkers(){
+    for (var i = 0; i < markersArray.length; i++ ) {
+    markersArray[i].setMap(null);
+  }
+  markersArray.length = 0;
+}
+
+function showLocalizations() {
+    var latitude=55.7875328965814;
+    var longitude=49.1810485487428;
+    var heading=213;
+
+    var myLatlng = new google.maps.LatLng(latitude, longitude);
+    var mapProp = {
+                center:myLatlng,
+                zoom:20,
+                mapTypeId:google.maps.MapTypeId.ROADMAP,
+                mapTypeControl: false
+    };
+    var map=new google.maps.Map(document.getElementById("googleMap"), mapProp);
+    var lastPointsUrl = '/api/lastpoints?cnt='+1;
+    var timer=setInterval(()=>{
+
+        $.get(lastPointsUrl, function( data ) {
+            //var points = data;
+            //console.log(points);
+            $.each(data, function(idx, obj) {
+                if(obj && obj.data && obj.data.length>1){
+                    console.log(obj.data[1]);
+                    var requestElement = obj.data[1];
+                    var lat=requestElement.latitude;
+                    var lon=requestElement.longitude;
+                    var myLatlng = new google.maps.LatLng(lat, lon);
+                    clearMarkers();
+                    var marker = new google.maps.Marker({
+                                position: myLatlng,
+                                map: map,
+                                title: obj.startTime,
+                                icon: {
+                                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                    scale: 4,
+                                    fillColor: "blue",
+                                    fillOpacity: 0.8,
+                                    strokeWeight: 2,
+                                    rotation: requestElement.heading
+                                }  
+                    });
+                    markersArray.push(marker);
+                } else {
+                    clearMarkers();
+                }
+            });
+        }); 
+        //updatePoints(map,lastPointsUrl); 
+    },3000);
+}
+
+</script>
+</head>
+<body onload='showLocalizations()'>
+<div id="googleMap" style="position:fixed;top:0px;left:0px;width:100%;height:1080px;">
+</body>
+</html>
