@@ -82,6 +82,7 @@
 
                             });
                             markersArray.push(circle);
+                            map.fitBounds(circle.getBounds());
 
                             if(obj.data.length>2){
                                 var busStops = obj.data[2];
