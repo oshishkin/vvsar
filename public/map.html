@@ -4,7 +4,17 @@
 <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800' rel='stylesheet' type='text/css'>
 <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyC2bzkxOHWWS6DZnLh3g7lA7nOf48zes_k"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-
+<style>
+        #googleMap {
+          height: 100%;
+        }
+        html,
+        body {
+          height: 100%;
+          margin: 0;
+          padding: 0;
+        }
+</style>
 <script>
 var markersArray=[];
 function clearMarkers(){
@@ -62,6 +72,6 @@ function showLocalizations() {
 </script>
 </head>
 <body onload='showLocalizations()'>
-<div id="googleMap" style="position:fixed;top:0px;left:0px;width:100%;height:1080px;">
+<div id="googleMap" style="top:0px;left:0px;width:100%;height:100%;">
 </body>
 </html>
