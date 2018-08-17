@@ -3,7 +3,7 @@ import {
 } from 'log4js';
 
 const log = getLogger('geoUtil.js');
-
+const sectorSize = 120;
 const coordsUtilsFactory = () => {
     const utils = {
         /**
@@ -113,6 +113,7 @@ export const getClosestStop = (stops, reqCoords) => {
  */
 export const getClosestStopAlg2 = (stops, reqCoords) => {
     reqCoords.sectorFilterEnabled = 0;
+    reqCoords.sectorSize = sectorSize;
     var filteredStops = 
     stops
         // filter by delta in bearings < 160 / 2
@@ -142,8 +143,9 @@ export const getClosestStopAlg2 = (stops, reqCoords) => {
             }
             return acc;
         }, []);
-
-        if(filteredStops.lenth>1){
+        
+        if(filteredStops.length>1){
+            // log.info('hello');
             var filteredStopsAndHeading = filteredStops
             .filter((s) =>{ 
                 var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
@@ -151,10 +153,11 @@ export const getClosestStopAlg2 = (stops, reqCoords) => {
                 var a1 = Math.abs(stopHeading-userHeading);
                 a1 = a1>180?(360-a1):a1;
                 
+                log.info("Angle",a1);    
                 
-                return a1 <= (((reqCoords.heading == 0) ? 360 : 360) / 2);
+                return a1 <= (((reqCoords.heading == 0) ? 360 : sectorSize) / 2);
             });
-            log.info("Angle");
+            
             if (filteredStopsAndHeading.length>=1){
                 reqCoords.sectorFilterEnabled = 1;
                 filteredStops = filteredStopsAndHeading;
