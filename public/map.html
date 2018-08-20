@@ -19,13 +19,41 @@
     </style>
     <script>
         var markersArray = [];
-
+        var phoneMarker = null;
+        var distanceCircle = null;
+    
         function clearMarkers() {
+            if(phoneMarker!=null){
+                phoneMarker.setMap(null);
+                phoneMarker = null;
+            }
+            if(distanceCircle!=null){
+                distanceCircle.setMap(null);
+                distanceCircle = null;
+            }
+            clearBusMarkers();
+        }
+
+        function clearBusMarkers() {
             for (var i = 0; i < markersArray.length; i++) {
                 markersArray[i].setMap(null);
             }
             markersArray.length = 0;
         }
+
+        function generateHash(s) {
+            var a = 1, c = 0, h, o;
+            if (s) {
+                a = 0;
+                for (h = s.length - 1; h >= 0; h--) {
+                    o = s.charCodeAt(h);
+                    a = (a<<6&268435455) + o + (o<<14);
+                    c = a & 266338304;
+                    a = c!==0?a^c>>21:a;
+                }
+            }
+            return String(a);
+        };
 
         function showLocalizations() {
             var latitude = 55.7875328965814;
@@ -38,14 +66,17 @@
                 tilt: 0,
                 mapTypeControl: false
             };
+            var hash = null;
             var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
             var lastPointsUrl = '/api/lastpoints?cnt=' + 1;
             $.ajaxSetup({
                 cache: false
             });
             var timer = setInterval(() => {
+                var newHash = null;
                 $.get(lastPointsUrl, function (data) {
-                    clearMarkers();
+                    //clearMarkers();
+                    newHash = generateHash(JSON.stringify(data));
                     $.each(data, function (idx, obj) {
                         if (obj && obj.data && obj.data.length > 1) {
                             console.log(obj.data[1]);
@@ -53,39 +84,51 @@
                             var lat = requestElement.latitude;
                             var lon = requestElement.longitude;
                             var myLatlng = new google.maps.LatLng(lat, lon);
-                            var marker = new google.maps.Marker({
-                                position: myLatlng,
-                                map: map,
-                                title: obj.startTime,
-                                icon: {
-                                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                    scale: 5,
-                                    fillColor: "blue",
-                                    fillOpacity: 0.8,
-                                    strokeWeight: 2,
-                                    rotation: requestElement.heading
-                                }
-                            });
-                            map.setCenter(myLatlng);
-                            markersArray.push(marker);
+                            var icon = {
+                                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                        scale: 5,
+                                        fillColor: "blue",
+                                        fillOpacity: 0.8,
+                                        strokeWeight: 2,
+                                        rotation: requestElement.heading
+                                    };
+                            if(phoneMarker==null){
+                                phoneMarker = new google.maps.Marker({
+                                    position: myLatlng,
+                                    map: map,
+                                    title: obj.startTime,
+                                    icon: icon
+                                });
+                            } else {
+                                phoneMarker.setPosition(myLatlng);
+                                phoneMarker.setIcon(icon);
+                            }
+                            //markersArray.push(marker);
+                            
+                            if(distanceCircle==null){
+                                distanceCircle = new google.maps.Circle({
+                                    center: myLatlng,
+                                    map: map,
+                                    strokeColor: '#000000',
+                                    strokeOpacity: 0.1,
+                                    strokeWeight: 1,
+                                    fillColor: '#000000',
+                                    fillOpacity: 0.1,
+                                    radius: requestElement.precision,
+                                    title: obj.startTime
 
-                            var circle = new google.maps.Circle({
-                                center: myLatlng,
-                                map: map,
-                                strokeColor: '#000000',
-                                strokeOpacity: 0.1,
-                                strokeWeight: 1,
-                                fillColor: '#000000',
-                                fillOpacity: 0.1,
-                                radius: requestElement.precision,
-                                title: obj.startTime
-
-                            });
-                            markersArray.push(circle);
-                            map.fitBounds(circle.getBounds());
+                                });
+                            } else {
+                                distanceCircle.setCenter(myLatlng);
+                                distanceCircle.setRadius(requestElement.precision);
+                            }
+                            //markersArray.push(circle);
+                            //map.fitBounds(distanceCircle.getBounds());
 
                             if(obj.data.length>2){
                                 var busStops = obj.data[2];
+                                if(hash!=newHash)
+                                    clearBusMarkers();
                                 $.each(busStops, function(idx, busStop){
                                     var bsLat = busStop.lat;
                                     var bsLon = busStop.lng;
@@ -101,8 +144,17 @@
                                     markersArray.push(marker);
                                 });
                             }
+                        } else {
+                            clearMarkers();
                         }
                     });
+                    console.log(newHash);
+                    if(hash!=newHash){
+                        if(map && distanceCircle){
+                            map.fitBounds(distanceCircle.getBounds());
+                        }
+                        hash=newHash;
+                    }
                 });
                 //updatePoints(map,lastPointsUrl); 
             }, 3000);
