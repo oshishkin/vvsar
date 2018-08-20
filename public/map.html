@@ -97,6 +97,7 @@
                             } else {
                                 phoneMarker.setPosition(myLatlng);
                                 phoneMarker.setIcon(icon);
+                                phoneMarker.setTitle(obj.startTime);
                             }
                             //markersArray.push(marker);
                             
@@ -110,8 +111,6 @@
                                     fillColor: '#000000',
                                     fillOpacity: 0.1,
                                     radius: requestElement.precision,
-                                    title: obj.startTime
-
                                 });
                             } else {
                                 distanceCircle.setCenter(myLatlng);
