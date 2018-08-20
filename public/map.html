@@ -69,10 +69,12 @@
                 var newHash = null;
                 $.get(lastPointsUrl, function (data) {
                     //clearMarkers();
+                    try{
+                        console.log(JSON.stringify(data));
+                    } catch(e){}
                     newHash = generateHash(JSON.stringify(data));
                     $.each(data, function (idx, obj) {
                         if (obj && obj.data && obj.data.length > 1) {
-                            console.log(obj.data[1]);
                             var requestElement = obj.data[1];
                             var lat = requestElement.latitude;
                             var lon = requestElement.longitude;
