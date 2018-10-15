@@ -171,25 +171,24 @@ const radarContainer = (x, y, width, height) => {
             `
 }
 
-export const generateObj = (jsonObj, width=400, height=650) => {
+const generateObj = (jsonObj, width=400, height=650) => {
 	const title = stationNameContainer(jsonObj.stationName);
-  const weather = weatherContainer(jsonObj.weather, 0, 60);
+    const weather = weatherContainer(jsonObj.weather, 0, 60);
     const timetable = timetableContainer(jsonObj.timetable, 0, 150);
     const radar = radarContainer(0, 410, 283, 243);
-return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" shape-rendering="optimizeSpeed">
-        ${defaultDefs}
-        <g>
-            <rect fill="#000" fill-opacity="0.2" width="100%" height="100%"/>
-            ${title}${weather}${timetable}
-        </g>
-        <g>
-            ${radar}
-        </g>
-        </svg>`;
+    
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" shape-rendering="optimizeSpeed">
+            ${defaultDefs}
+            <g>
+                <rect fill="#000" fill-opacity="0.2" width="100%" height="100%"/>
+                ${title}${weather}${timetable}
+            </g>
+            <g>
+                ${radar}
+            </g>
+            </svg>`;
 }
 
-
-
-
-
-
+module.exports = {
+    generateObj
+}

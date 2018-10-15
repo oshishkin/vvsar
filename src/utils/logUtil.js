@@ -1,11 +1,6 @@
-import fs from 'fs';
-import {
-    getLogger
-} from 'log4js';
-const log = getLogger('logUtil.js');
+const fs = require('fs');
 
-
-export async function requestLogs(cnt) {
+async function requestLogs(cnt) {
     var resp=requestLogsInfo();
     if(cnt && cnt*1>0 && resp && resp.length>cnt*1){
         resp=resp.slice(-cnt);
@@ -27,4 +22,8 @@ function requestLogsInfo() {
             return el && el.data && el.data.length>0 && el.data[0]=='getClosestStops';
         }) : [];
     return result;
+}
+
+module.exports = {
+    requestLogs
 }

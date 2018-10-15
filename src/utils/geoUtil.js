@@ -1,6 +1,4 @@
-import {
-    getLogger
-} from 'log4js';
+const { getLogger } = require('log4js');
 
 const log = getLogger('geoUtil.js');
 const sectorSize = 120;
@@ -65,7 +63,7 @@ const coordsUtils = coordsUtilsFactory();
  * @param {*} bearing
  * @return object - stop that is closest to point
  */
-export const getClosestStop = (stops, reqCoords) => {
+const getClosestStop = (stops, reqCoords) => {
     return stops
         // filter by delta in bearings < 160 / 2
         .filter((s) =>{ 
@@ -85,7 +83,7 @@ export const getClosestStop = (stops, reqCoords) => {
                 distance: coordsUtils.distance(s.lat, s.lng, reqCoords.latitude, reqCoords.longitude)
             };
         })
-        // find closest stop by distance
+        // aggregate closest stop by distance
         .reduce((acc, s) => {
             if (s.distance < (reqCoords.precision )) {
                 acc.push(s);
@@ -111,7 +109,7 @@ export const getClosestStop = (stops, reqCoords) => {
  * @param {*} bearing
  * @return object - stop that is closest to point
  */
-export const getClosestStopAlg2 = (stops, reqCoords) => {
+const getClosestStopAlg2 = (stops, reqCoords) => {
     reqCoords.sectorFilterEnabled = 0;
     reqCoords.sectorSize = sectorSize;
     var filteredStops = 
@@ -166,3 +164,7 @@ export const getClosestStopAlg2 = (stops, reqCoords) => {
 
         return filteredStops;
 };
+
+module.exports = {
+    getClosestStop, getClosestStopAlg2
+}

@@ -6,3 +6,7 @@
 /nohup.out
 /npm-debug.log
 /vvsar.log
+/vvsar_pm2.log
+
+# vscode config
+/.vscode/

@@ -1,32 +1,13 @@
 #!/usr/bin/env node
-
-import express from 'express';
-import moment from 'moment';
-const asyncHandler = require('express-async-handler');
+const express = require('express');
+const moment = require('moment');
 const coordsTolerance = 10;
-import {
-    generateObj
-} from './src/utils/svgUtil';
-import {
-    requestStopsInfo,
-    requestWeatherInfo
-} from './src/utils/triasUtil';
-import {
-    getClosestStop,
-    getClosestStopAlg2
-} from './src/utils/geoUtil';
-import {
-    getDbStops
-} from './src/utils/dbUtil';
-import {
-    requestLogs
-} from './src/utils/logUtil';
+const { requestStopsInfo, requestWeatherInfo } = require('./src/utils/triasUtil');
+const { getClosestStopAlg2 } = require('./src/utils/geoUtil');
+const { getDbStops, insertClosestStopRequest, tailClosestStopRequests } = require('./src/utils/dbUtil');
+// const { requestLogs } = require('./src/utils/logUtil');
 
-import {
-    configure,
-    getLogger,
-    addLayout
-} from 'log4js';
+const { configure, getLogger, addLayout } = require('log4js');
 addLayout('json', function (config) {
     return function (logEvent) {
         return JSON.stringify(logEvent) + ",";
@@ -104,9 +85,11 @@ function getReqCoords(req) {
 async function getClosestStops(reqCoords) {
     const allStops = await getDbStops();
 
-    const filteredStops = //[{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
-    getClosestStopAlg2(allStops, reqCoords);
-    log.info("getClosestStops",reqCoords,filteredStops);
+    const filteredStops = getClosestStopAlg2(allStops, reqCoords);
+    // [{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
+    log.info("getClosestStops", reqCoords, filteredStops);
+    insertClosestStopRequest(reqCoords, filteredStops);
+
     // const value = await requestStopsInfo(filteredStops); 
     return filteredStops;
 }
@@ -145,7 +128,7 @@ const compileResponce = async (value) => {
 }
 
 
-const handleStopRequest = asyncHandler(async (req, res) => {
+const handleStopRequest = async (req, res) => {
     // console.log("Body:");
     // console.log(req.body);
     // console.log("query:");
@@ -164,23 +147,29 @@ const handleStopRequest = asyncHandler(async (req, res) => {
     });
     res.send(value);
 
-});
+};
 
 // handle stop request
 app.get("/api/stop", handleStopRequest);
 app.post("/api/stop", handleStopRequest);
 
-app.get("/api/nearestStops", asyncHandler(async (req, res) => {
+app.get("/api/nearestStops", async (req, res) => {
     var reqCoords = getReqCoords(req);
     var closestStops = await getClosestStops(reqCoords);
     res.send(closestStops);
-}));
+});
 
 //
-const handleLogsRequest = asyncHandler(async (req, res) => {
-    var value = await requestLogs(req.query.cnt); //.then(value =>{
-    res.send(value);
-});
+const handleLogsRequest = async (req, res) => {
+    var values = await tailClosestStopRequests(req.query.cnt);
+    // await requestLogs(req.query.cnt); //.then(value =>{
+    res.send(
+        values.reverse().map(({request, response, created_at}) => ({
+            startTime: created_at,
+            data: [request, response]
+        }))
+    );
+};
 app.get("/api/lastpoints", handleLogsRequest);
 
 app.listen(httpPort, () => {

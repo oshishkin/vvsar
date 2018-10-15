@@ -1,15 +1,9 @@
-import http from 'http';
-import request from 'sync-request';
-import json2xml from 'json2xml';
-import xml2js from 'xml2js';
-import util from 'util';
-import moment from 'moment';
-import {
-    getDbRoutes
-} from './dbUtil';
-import {
-    getLogger
-} from 'log4js';
+const request = require('sync-request');
+const json2xml = require('json2xml');
+const xml2js = require('xml2js');
+const moment = require('moment');
+const { getDbRoutes } = require('./dbUtil');
+const { getLogger } = require('log4js');
 
 const log = getLogger('triasUtil.js');
 
@@ -23,7 +17,7 @@ const xmlToJSON = async function (xml) {
     });
 }
 
-export async function requestStopsInfo(stops) {
+async function requestStopsInfo(stops) {
     var timetable = [];
     // console.log(stops);
     // var tt,
@@ -110,7 +104,7 @@ async function requestStopInfo(stop) {
     };
 }
 
-export function requestWeatherInfo(latlng) {
+function requestWeatherInfo(latlng) {
     var tzOffset=2;
     var weatherUrl = 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&units=metric&lat=' + latlng.lat + '&lon=' + latlng.lng;
     var forecastUrl = 'http://api.openweathermap.org/data/2.5/forecast?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat='+latlng.lat+'&lon='+latlng.lng+'&units=metric&cnt=8';
@@ -143,7 +137,7 @@ export function requestWeatherInfo(latlng) {
     return val;
 }
 
-export function getDate() {
+function getDate() {
     var date = new Date();
     var hours = date.getHours();
     var minutes = date.getMinutes();
@@ -154,11 +148,11 @@ export function getDate() {
     return year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" + seconds;
 }
 
-export function getTime(unixts) {
+function getTime(unixts) {
     return getTimeByOffset(unixts, 2);
 }
 
-export function getTimeByOffset(unixts, offset) {
+function getTimeByOffset(unixts, offset) {
     var date = moment(unixts).utcOffset(offset).format("HH:mm"); // new Date(unixts);
     return date;
 }
@@ -202,3 +196,8 @@ const buildTriasRequest = (stop) => {
     // console.log(body);
     return body;
 };
+
+module.exports = {
+    requestStopsInfo, requestWeatherInfo, getDate,
+    getTime, getTimeByOffset, 
+}
