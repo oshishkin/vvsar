@@ -5,41 +5,6 @@ const coordsTolerance = 10;
 const { requestStopsInfo, requestWeatherInfo } = require('./src/utils/triasUtil');
 const { getClosestStopAlg2 } = require('./src/utils/geoUtil');
 const { getDbStops, insertClosestStopRequest, tailClosestStopRequests } = require('./src/utils/dbUtil');
-// const { requestLogs } = require('./src/utils/logUtil');
-
-const { configure, getLogger, addLayout } = require('log4js');
-addLayout('json', function (config) {
-    return function (logEvent) {
-        return JSON.stringify(logEvent) + ",";
-    }
-});
-configure({
-    appenders: {
-        out: {
-            type: 'stdout',
-            layout: {
-                type: 'json',
-                separator: ','
-            }
-        },
-        file: {
-            type: 'file',
-            filename: 'vvsar.log',
-            layout: {
-                type: 'json',
-                separator: ','
-            }
-
-        }
-    },
-    categories: {
-        default: {
-            appenders: ['out', 'file'],
-            level: 'info'
-        }
-    }
-});
-const log = getLogger('index.js');
 
 const httpPort = process.env.PORT || 7654;
 const app = express();
@@ -58,9 +23,9 @@ app.use(function (req, res, next) {
 });
 
 function getReqCoords(req) {
-    log.info('Query:',req.query);
-    log.info('Body:',req.body);
-    log.info('Headers:',req.headers);
+    console.info('Query:',req.query);
+    console.info('Body:',req.body);
+    console.info('Headers:',req.headers);
     var reqCoords;
     var body = req.body;
     body=body.replace('"latitude"','latitude');body=body.replace('latitude','"latitude"');
@@ -74,11 +39,11 @@ function getReqCoords(req) {
         try {
             reqCoords = JSON.parse(req.query.val);
         } catch (error) {
-            log.error("Error getting coords from request",error);
+            console.error("Error getting coords from request",error);
         }
     }
     reqCoords.precision = reqCoords.precision+coordsTolerance;
-    log.info("getReqCoords",reqCoords);
+    console.info("getReqCoords",reqCoords);
     return reqCoords;
 }
 
@@ -87,7 +52,7 @@ async function getClosestStops(reqCoords) {
 
     const filteredStops = getClosestStopAlg2(allStops, reqCoords);
     // [{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
-    log.info("getClosestStops", reqCoords, filteredStops);
+    console.info("getClosestStops", reqCoords, filteredStops);
     insertClosestStopRequest(reqCoords, filteredStops);
 
     // const value = await requestStopsInfo(filteredStops); 
@@ -105,7 +70,7 @@ const compileResponce = async (value) => {
     value.refreshRate = 3;
     // value.refreshRate = 1 + rt * 10;
     value.timetable = value.timetable; //.slice(0, 4);
-    log.debug("compile responce", value);
+    console.debug("compile responce", value);
     value.timetable = value.timetable.map(current => {
         current.timetobus = Math.floor(moment(moment(current.departureTime) - now) / 1000 / 60);
         maxTimeToBus = maxTimeToBus < current.timetobus ? current.timetobus : maxTimeToBus;
@@ -129,13 +94,6 @@ const compileResponce = async (value) => {
 
 
 const handleStopRequest = async (req, res) => {
-    // console.log("Body:");
-    // console.log(req.body);
-    // console.log("query:");
-    // console.log(req.query);
-    // console.log("headers:");
-    // console.log(req.headers);
-
     var reqCoords = getReqCoords(req);
 
     var closestStops = await getClosestStops(reqCoords);
@@ -162,10 +120,9 @@ app.get("/api/nearestStops", async (req, res) => {
 //
 const handleLogsRequest = async (req, res) => {
     var values = await tailClosestStopRequests(req.query.cnt);
-    // await requestLogs(req.query.cnt); //.then(value =>{
     res.send(
         values.reverse().map(({request, response, created_at}) => ({
-            startTime: created_at,
+            startTimeMs: created_at,
             data: [request, response]
         }))
     );

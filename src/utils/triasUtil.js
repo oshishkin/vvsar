@@ -3,10 +3,6 @@ const json2xml = require('json2xml');
 const xml2js = require('xml2js');
 const moment = require('moment');
 const { getDbRoutes } = require('./dbUtil');
-const { getLogger } = require('log4js');
-
-const log = getLogger('triasUtil.js');
-
 
 const xmlToJSON = async function (xml) {
     var xmlParser = new xml2js.Parser();
@@ -19,12 +15,10 @@ const xmlToJSON = async function (xml) {
 
 async function requestStopsInfo(stops) {
     var timetable = [];
-    // console.log(stops);
     // var tt,
     var i;
     for (i = 0; i < stops.length; i++) {
         var tt = await requestStopInfo(stops[i]);
-        // console.log(tt);
         timetable = timetable.concat(tt.timetable);
     }
     timetable = timetable
@@ -43,14 +37,14 @@ async function requestStopsInfo(stops) {
         stationName: stops[0]==undefined?'':stops[0].stop_name,
         timetable: timetable
     };
-    log.info("requestStopsInfo num of results=",resp.timetable.length);
-    log.debug("requestStopsInfo ",resp);
+    console.info("requestStopsInfo num of results=",resp.timetable.length);
+    console.debug("requestStopsInfo ",resp);
     return resp;
 }
 
 async function requestStopInfo(stop) {
     var body = buildTriasRequest(stop);
-    log.debug("Get stop schedule for:", stop);
+    console.debug("Get stop schedule for:", stop);
     var postRequest = {
         host: "efastatic.vvs.de",
         path: "/makeathon/trias",
@@ -111,7 +105,6 @@ function requestWeatherInfo(latlng) {
     var currentWeather = JSON.parse(request('GET', weatherUrl).body.toString('utf-8'));
     var forecastWeather = JSON.parse(request('GET', forecastUrl).body.toString('utf-8'));
     
-    //console.log(currentWeather);
     var val = { 
                 now: { temp: '-', conditions: 'Clear' }, 
                 sunrise: { time: 0, temp: '-', conditions: 'Clear' }, 
@@ -193,7 +186,6 @@ const buildTriasRequest = (stop) => {
         header: true
     });
 
-    // console.log(body);
     return body;
 };
 

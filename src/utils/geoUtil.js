@@ -1,6 +1,3 @@
-const { getLogger } = require('log4js');
-
-const log = getLogger('geoUtil.js');
 const sectorSize = 120;
 const coordsUtilsFactory = () => {
     const utils = {
@@ -29,7 +26,6 @@ const coordsUtilsFactory = () => {
             const y = Math.sin(dLon) * Math.cos(lat2);
             const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
             const bearing = utils.toDeg(Math.atan2(y, x));
-            // console.log(Math.abs(bearing));
             return ((bearing>0?0:360)+bearing);
         },
 
@@ -72,17 +68,14 @@ const getClosestStop = (stops, reqCoords) => {
             var a1 = Math.abs(stopHeading-userHeading);
             a1 = a1>180?(360-a1):a1;
             
-            log.debug(a1);
+            console.debug(a1);
             return a1 <= (((reqCoords.heading == 0) ? 360 : 360) / 2);
         
         })
         // add distance from point to each stop
-        .map((s) => {
-            // console.log(coordsUtils().distance(s.lat, s.lng, lat, lng));
-            return { ...s,
-                distance: coordsUtils.distance(s.lat, s.lng, reqCoords.latitude, reqCoords.longitude)
-            };
-        })
+        .map((s) => ({ ...s,
+            distance: coordsUtils.distance(s.lat, s.lng, reqCoords.latitude, reqCoords.longitude)
+        }))
         // aggregate closest stop by distance
         .reduce((acc, s) => {
             if (s.distance < (reqCoords.precision )) {
@@ -91,9 +84,7 @@ const getClosestStop = (stops, reqCoords) => {
             return acc;
         }, [])
         //sort by distance
-        .sort((a, b) => {
-            return a.distance - b.distance
-        })
+        .sort((a, b) => a.distance - b.distance)
         //leave 14 closest stops
         .reduce((acc, s, index) => {
             if (index < 14) {
@@ -117,7 +108,6 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
         // filter by delta in bearings < 160 / 2
         // add distance from point to each stop
         .map((s) => {
-            // console.log(coordsUtils().distance(s.lat, s.lng, lat, lng));
             return { ...s,
                 distance: coordsUtils.distance(s.lat, s.lng, reqCoords.latitude, reqCoords.longitude)
             };
@@ -143,7 +133,6 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
         }, []);
         
         if(filteredStops.length>1){
-            // log.info('hello');
             var filteredStopsAndHeading = filteredStops
             .filter((s) =>{ 
                 var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
@@ -151,7 +140,7 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
                 var a1 = Math.abs(stopHeading-userHeading);
                 a1 = a1>180?(360-a1):a1;
                 
-                log.info("Angle",a1);    
+                console.info("Angle",a1);
                 
                 return a1 <= (((reqCoords.heading == 0) ? 360 : sectorSize) / 2);
             });

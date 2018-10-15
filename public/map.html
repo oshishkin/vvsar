@@ -69,7 +69,8 @@
                 const responseJson = await response.json();
                 const newHash = generateHash(JSON.stringify(responseJson));
 
-                responseJson.forEach(({data, startTime}) => {
+                responseJson.forEach(({data, startTimeMs}) => {
+                    const startTime = new Date(startTimeMs - new Date().getTimezoneOffset() * 60 * 1000);
                     // data[0] is request
                     if (data && data.length > 0) {
                         const { latitude, longitude, heading, precision } = data[0];
