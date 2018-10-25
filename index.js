@@ -130,7 +130,7 @@ app.get("/api/nearestStops", async (req, res) => {
 //
 app.get("/api/lastpoints", async (req, res) => {
     res.send(
-        (await tailClosestStopRequests(3)).slice(-1)//req.query.cnt))
+        (await tailClosestStopRequests(req.query.cnt))
         .map(({request, request_corrected, response, startTime, id}) => ({
             startTime,
             data: [
