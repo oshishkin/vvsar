@@ -134,7 +134,8 @@ app.get("/api/lastpoints", async (req, res) => {
             startTimeMs: created_at,
             data: [
                 request_corrected || request,
-                response
+                response,
+                request_corrected ? request : undefined
             ],
             id
         }))
