@@ -160,31 +160,35 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
  * @param q - filtered data part
  */
 const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1 ) => {
-    return gpsPoints
+    const {sumLatitude, sumLongitude, maxPrecision, sumWeight, datetime, heading} = gpsPoints
         // sort data by precision and startTime
         .sort((a, b) => b.precision - a.precision || new Date(b.startTime) - new Date(a.startTime))
         // filter 0.25% of data
         .slice(Math.floor(gpsPoints.length * q))
         // sum latitude and longitude
-        .reduce(({latitude, longitude, sumWeight, maxPrecision}, {heading, datetime, precision, ...point}, i, data) => {
+        .reduce((
+            {sumLatitude, sumLongitude, sumWeight, maxPrecision},
+            {latitude, longitude, heading, datetime, precision},
+            i, data
+        ) => {
             const n = data.length;
-            // result
-            if (i === n - 1) {
-                return {
-                    latitude: sumWeight ? latitude / sumWeight : point.latitude,
-                    longitude: sumWeight ? longitude / sumWeight : point.longitude,
-                    heading, startTime: datetime, precision: maxPrecision ? maxPrecision : precision
-                }
-            }
             // iteration
             const weight = weighting(i/n)
             return {
-                latitude: latitude + weight * point.latitude,
-                longitude: longitude + weight * point.longitude,
+                sumLatitude: sumLatitude + weight * latitude,
+                sumLongitude: sumLongitude + weight * longitude,
                 sumWeight: sumWeight + weight,
-                maxPrecision: Math.max(maxPrecision, precision)
+                maxPrecision: Math.max(maxPrecision, precision),
+                datetime, heading
             }
-        }, {latitude: 0, longitude: 0, sumWeight: 0, maxPrecision: 0})
+        }, {sumLatitude: 0, sumLongitude: 0, sumWeight: 0, maxPrecision: 0});
+
+    return {
+        latitude: sumWeight ? sumLatitude / sumWeight : undefined,
+        longitude: sumWeight ? sumLongitude / sumWeight : undefined,
+        precision: maxPrecision ? maxPrecision : undefined,
+        heading, startTime: datetime
+    }
 }
 
 module.exports = {
