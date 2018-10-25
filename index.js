@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const express = require('express');
 const moment = require('moment');
-const coordsTolerance = 10;
+const coordsTolerance = 20;
 const { requestStopsInfo, requestWeatherInfo } = require('./src/utils/triasUtil');
 const { getClosestStopAlg2, findAverage } = require('./src/utils/geoUtil');
 const { getDbStops, insertClosestStopRequest, tailClosestStopRequests } = require('./src/utils/dbUtil');
@@ -82,7 +82,7 @@ const compileResponce = async (value) => {
     value.timetable = value.timetable; //.slice(0, 4);
     console.debug("compile responce", value);
     value.timetable = value.timetable.map(current => {
-        current.timetobus = Math.floor(moment(moment(current.departureTime) - now) / 1000 / 60);
+        current.timetobus = Math.floor(moment(moment(current.departureTime) - now) / 1000 / 60)<0?0: Math.floor(moment(moment(current.departureTime) - now) / 1000 / 60)
         maxTimeToBus = maxTimeToBus < current.timetobus ? current.timetobus : maxTimeToBus;
         return current;
     });
