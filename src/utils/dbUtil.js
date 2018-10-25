@@ -23,7 +23,7 @@ const getDbRoutes = async () => {
     return dbRoutes;
 }
 
-const insertClosestStopRequest = async (request, requestCorrected, response, createdAt) => {
+const insertClosestStopRequest = async (request, requestCorrected, response, createdAt = Date.now()) => {
     try {
         await pool.query(
             'INSERT INTO closest_stop_request(request, request_corrected, response, created_at) VALUES($1, $2, $3, $4)',
