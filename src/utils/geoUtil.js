@@ -164,16 +164,16 @@ const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1 ) => {
         // sort data by precision and startTime
         .sort((a, b) => b.precision - a.precision || new Date(b.startTime) - new Date(a.startTime))
         // filter 0.25% of data
-        .slice(Math.ceil(gpsPoints.length * q))
+        .slice(Math.floor(gpsPoints.length * q))
         // sum latitude and longitude
         .reduce(({latitude, longitude, sumWeight, maxPrecision}, {heading, datetime, precision, ...point}, i, data) => {
             const n = data.length;
             // result
             if (i === n - 1) {
                 return {
-                    latitude: sumWeight && latitude / sumWeight,
-                    longitude: sumWeight && longitude / sumWeight,
-                    heading, startTime: datetime, precision: maxPrecision
+                    latitude: sumWeight ? latitude / sumWeight : point.latitude,
+                    longitude: sumWeight ? longitude / sumWeight : point.longitude,
+                    heading, startTime: datetime, precision: maxPrecision ? maxPrecision : precision
                 }
             }
             // iteration

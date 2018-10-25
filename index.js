@@ -129,17 +129,18 @@ app.get("/api/nearestStops", async (req, res) => {
 
 //
 app.get("/api/lastpoints", async (req, res) => {
-    res.send(
-        (await tailClosestStopRequests(req.query.cnt))
-        .map(({request, request_corrected, response, startTime, id}) => ({
-            startTime,
+    const result = (await tailClosestStopRequests(req.query.cnt))
+        .map(({request, request_corrected, response, created_at, id}) => ({
+            startTimeMs: created_at,
             data: [
                 request_corrected || request,
                 response
             ],
             id
         }))
-    );
+    ;
+
+    res.send(result);
 });
 
 app.listen(httpPort, () => {
