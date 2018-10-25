@@ -159,10 +159,8 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
  * @param gpsPoints - array of gps points
  * @param q - filtered data part
  */
-const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1 ) => {
-    const lastPoint = gpsPoints[gpsPoints.length - 1];
-    
-    const {sumLatitude, sumLongitude, maxPrecision, sumWeight, datetime, heading, n} = gpsPoints //Array(20).fill(lastPoint)
+const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1) => {
+    const {sumLatitude, sumLongitude, maxPrecision, sumWeight, datetime, heading, n} = gpsPoints
         // sort data by precision and startTime
         .sort((a, b) => b.precision - a.precision || new Date(b.startTime) - new Date(a.startTime))
         // filter 0.25% of data
@@ -192,8 +190,6 @@ const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1 ) => {
         heading, startTime: datetime
     }
 
-    const distance = coordsUtils.distance(result.latitude, result.longitude, lastPoint.latitude, lastPoint.longitude);
-    // console.log(distance - (result.precision + lastPoint.precision));
     return result;
 }
 
