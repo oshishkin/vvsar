@@ -49,7 +49,7 @@ function getReqCoords(req) {
 
 const correctRequestPoint = (reqCoords) => (
     reqCoords.childs && reqCoords.childs.length > 0
-        ? { ...reqCoords, ...findAverage(reqCoords.childs)}
+        ? findAverage(reqCoords.childs.concat(reqCoords).slice(1))
         : reqCoords
 )
 
