@@ -3,7 +3,7 @@ const express = require('express');
 const moment = require('moment');
 const coordsTolerance = 20;
 const { requestStopsInfo, requestWeatherInfo } = require('./src/utils/triasUtil');
-const { getClosestStopAlg2, findAverage } = require('./src/utils/geoUtil');
+const { getClosestStopAlg2, correctRequestPoint } = require('./src/utils/geoUtil');
 const { getDbStops, insertClosestStopRequest, tailClosestStopRequests } = require('./src/utils/dbUtil');
 
 const httpPort = process.env.PORT || 7654;
@@ -46,12 +46,6 @@ function getReqCoords(req) {
     console.info("getReqCoords",reqCoords);
     return reqCoords;
 }
-
-const correctRequestPoint = (reqCoords) => (
-    reqCoords.childs && reqCoords.childs.length > 0
-        ? findAverage(reqCoords.childs.concat(reqCoords).slice(1))
-        : reqCoords
-)
 
 async function getClosestStops(reqCoords) {
     const allStops = await getDbStops();

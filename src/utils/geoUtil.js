@@ -160,7 +160,9 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
  * @param q - filtered data part
  */
 const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1 ) => {
-    const {sumLatitude, sumLongitude, maxPrecision, sumWeight, datetime, heading} = gpsPoints
+    const lastPoint = gpsPoints[gpsPoints.length - 1];
+    
+    const {sumLatitude, sumLongitude, maxPrecision, sumWeight, datetime, heading, n} = gpsPoints //Array(20).fill(lastPoint)
         // sort data by precision and startTime
         .sort((a, b) => b.precision - a.precision || new Date(b.startTime) - new Date(a.startTime))
         // filter 0.25% of data
@@ -179,18 +181,36 @@ const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1 ) => {
                 sumLongitude: sumLongitude + weight * longitude,
                 sumWeight: sumWeight + weight,
                 maxPrecision: Math.max(maxPrecision, precision),
-                datetime, heading
+                datetime, heading, n
             }
-        }, {sumLatitude: 0, sumLongitude: 0, sumWeight: 0, maxPrecision: 0});
+        }, {sumLatitude: 0, sumLongitude: 0, sumWeight: 0, maxPrecision: 0, n: 0});
 
-    return {
+    const result = {
         latitude: sumWeight ? sumLatitude / sumWeight : undefined,
         longitude: sumWeight ? sumLongitude / sumWeight : undefined,
         precision: maxPrecision ? maxPrecision : undefined,
         heading, startTime: datetime
     }
+
+    const distance = coordsUtils.distance(result.latitude, result.longitude, lastPoint.latitude, lastPoint.longitude);
+    // console.log(distance - (result.precision + lastPoint.precision));
+    return result;
+}
+
+const correctRequestPoint = (reqCoords) => {
+    const { childs } = reqCoords;
+    if (childs && childs.length > 0) {
+        const points = childs.filter(({latitude, longitude, precision}) => (
+            coordsUtils.distance(latitude, longitude, reqCoords.latitude, reqCoords.longitude) - (precision + reqCoords.precision) > 2
+        ))
+        .concat(reqCoords);
+        const result = findAverage(points.length > 20 ? points.slice(-20) : points);
+        return result;
+    }
+
+    return reqCoords;
 }
 
 module.exports = {
-    getClosestStop, getClosestStopAlg2, findAverage
+    getClosestStop, getClosestStopAlg2, findAverage, correctRequestPoint
 }
