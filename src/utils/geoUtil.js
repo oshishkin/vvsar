@@ -105,7 +105,6 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
     reqCoords.sectorSize = sectorSize;
     var filteredStops = 
     stops
-        // filter by delta in bearings < 160 / 2
         // add distance from point to each stop
         .map((s) => {
             return { ...s,
@@ -132,28 +131,62 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
             return acc;
         }, []);
         
-        if(filteredStops.length>1){
-            var filteredStopsAndHeading = filteredStops
-            .filter((s) =>{ 
-                var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
-                var userHeading = reqCoords.heading;
-                var a1 = Math.abs(stopHeading-userHeading);
-                a1 = a1>180?(360-a1):a1;
+        // filter by heading
+        // if(filteredStops.length>1){
+        //     var filteredStopsAndHeading = filteredStops
+        //     .filter((s) =>{ 
+        //         var stopHeading = coordsUtils.bearing(reqCoords.latitude, reqCoords.longitude, s.lat, s.lng);
+        //         var userHeading = reqCoords.heading;
+        //         var a1 = Math.abs(stopHeading-userHeading);
+        //         a1 = a1>180?(360-a1):a1;
                 
-                console.info("Angle",a1);
+        //         console.info("Angle",a1);
                 
-                return a1 <= (((reqCoords.heading == 0) ? 360 : sectorSize) / 2);
-            });
+        //         return a1 <= (((reqCoords.heading == 0) ? 360 : sectorSize) / 2);
+        //     });
             
-            if (filteredStopsAndHeading.length>=1){
-                reqCoords.sectorFilterEnabled = 1;
-                filteredStops = filteredStopsAndHeading;
-            }
-        }
+        //     if (filteredStopsAndHeading.length>=1){
+        //         reqCoords.sectorFilterEnabled = 1;
+        //         filteredStops = filteredStopsAndHeading;
+        //     }
+        // }
 
         return filteredStops;
 };
 
+/**
+ * creates an average point from an array of gpsPoints
+ * @param gpsPoints - array of gps points
+ * @param q - filtered data part
+ */
+const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1 ) => {
+    return gpsPoints
+        // sort data by precision and startTime
+        .sort((a, b) => b.precision - a.precision || new Date(b.startTime) - new Date(a.startTime))
+        // filter 0.25% of data
+        .slice(Math.ceil(gpsPoints.length * q))
+        // sum latitude and longitude
+        .reduce(({latitude, longitude, sumWeight, maxPrecision}, {heading, datetime, precision, ...point}, i, data) => {
+            const n = data.length;
+            // result
+            if (i === n - 1) {
+                return {
+                    latitude: sumWeight && latitude / sumWeight,
+                    longitude: sumWeight && longitude / sumWeight,
+                    heading, startTime: datetime, precision: maxPrecision
+                }
+            }
+            // iteration
+            const weight = weighting(i/n)
+            return {
+                latitude: latitude + weight * point.latitude,
+                longitude: longitude + weight * point.longitude,
+                sumWeight: sumWeight + weight,
+                maxPrecision: Math.max(maxPrecision, precision)
+            }
+        }, {latitude: 0, longitude: 0, sumWeight: 0, maxPrecision: 0})
+}
+
 module.exports = {
-    getClosestStop, getClosestStopAlg2
+    getClosestStop, getClosestStopAlg2, findAverage
 }

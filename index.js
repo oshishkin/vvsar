@@ -3,7 +3,7 @@ const express = require('express');
 const moment = require('moment');
 const coordsTolerance = 10;
 const { requestStopsInfo, requestWeatherInfo } = require('./src/utils/triasUtil');
-const { getClosestStopAlg2 } = require('./src/utils/geoUtil');
+const { getClosestStopAlg2, findAverage } = require('./src/utils/geoUtil');
 const { getDbStops, insertClosestStopRequest, tailClosestStopRequests } = require('./src/utils/dbUtil');
 
 const httpPort = process.env.PORT || 7654;
@@ -47,13 +47,23 @@ function getReqCoords(req) {
     return reqCoords;
 }
 
+const correctRequestPoint = (reqCoords) => (
+    reqCoords.childs && reqCoords.childs.length > 0
+        ? { ...reqCoords, ...findAverage(reqCoords.childs)}
+        : reqCoords
+)
+
 async function getClosestStops(reqCoords) {
     const allStops = await getDbStops();
 
-    const filteredStops = getClosestStopAlg2(allStops, reqCoords);
-    // [{"stop_id":"de:08111:2488:0:3","stop_name":"Nobelstraße","lat":48.740356600365,"lng":9.10019824732889,"distance":0}];
+    // correct requested values using average from all previous (20 by default)
+    const corretedRequest = correctRequestPoint(reqCoords);
+
+    const filteredStops = getClosestStopAlg2(
+        allStops, corretedRequest
+    );
     console.info("getClosestStops", reqCoords, filteredStops);
-    insertClosestStopRequest(reqCoords, filteredStops);
+    insertClosestStopRequest(reqCoords, corretedRequest, filteredStops);
 
     // const value = await requestStopsInfo(filteredStops); 
     return filteredStops;
@@ -97,11 +107,11 @@ const handleStopRequest = async (req, res) => {
     var reqCoords = getReqCoords(req);
 
     var closestStops = await getClosestStops(reqCoords);
-    var value = await requestStopsInfo(closestStops); //.then(value =>{
+    var value = await requestStopsInfo(closestStops);
     value = await compileResponce(value);
     value.weather = requestWeatherInfo({
-        lat: reqCoords.latitude, // GTFS_STOPS[0].stop_lat,
-        lng: reqCoords.longitude //GTFS_STOPS[0].stop_lon
+        lat: reqCoords.latitude,
+        lng: reqCoords.longitude
     });
     res.send(value);
 
@@ -118,16 +128,19 @@ app.get("/api/nearestStops", async (req, res) => {
 });
 
 //
-const handleLogsRequest = async (req, res) => {
-    var values = await tailClosestStopRequests(req.query.cnt);
+app.get("/api/lastpoints", async (req, res) => {
     res.send(
-        values.reverse().map(({request, response, created_at}) => ({
-            startTimeMs: created_at,
-            data: [request, response]
+        (await tailClosestStopRequests(3)).slice(-1)//req.query.cnt))
+        .map(({request, request_corrected, response, startTime, id}) => ({
+            startTime,
+            data: [
+                request_corrected || request,
+                response
+            ],
+            id
         }))
     );
-};
-app.get("/api/lastpoints", handleLogsRequest);
+});
 
 app.listen(httpPort, () => {
     console.info("App is running at port " + httpPort);

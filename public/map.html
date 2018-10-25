@@ -70,7 +70,7 @@
                 const newHash = generateHash(JSON.stringify(responseJson));
 
                 responseJson.forEach(({data, startTimeMs}) => {
-                    const startTime = new Date(startTimeMs - new Date().getTimezoneOffset() * 60 * 1000);
+                    const startTime = new Date(startTimeMs - new Date().getTimezoneOffset() * 60 * 1000).toString();
                     // data[0] is request
                     if (data && data.length > 0) {
                         const { latitude, longitude, heading, precision } = data[0];
@@ -137,7 +137,7 @@
 
                 // update map bounds if response hash changes
                 if (hash != newHash){
-                    if (map && distanceCircle){ 
+                    if (map && distanceCircle){
                         map.fitBounds(distanceCircle.getBounds());
                     }
                     hash = newHash;
