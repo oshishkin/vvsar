@@ -159,7 +159,7 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
  * @param gpsPoints - array of gps points
  * @param q - filtered data part
  */
-const findAverage = (gpsPoints=[], q=0.25, weighting=(i, n)=> i/n) => {
+const findAverage = (gpsPoints=[], q=0.25, weighting=(i, n)=> 1 + i/n) => {
     if (gpsPoints.length === 0) return undefined;
     const point = gpsPoints[gpsPoints.length - 1];
 
