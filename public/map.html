@@ -180,6 +180,8 @@
                             let latlngbounds = distanceCircle.getBounds();
                             if(phoneMarkerReal!=null) latlngbounds.extend(phoneMarkerReal.position);
                             map.fitBounds(latlngbounds);
+                            var zoom = map.getZoom();
+                            map.setZoom(zoom > 19 ? 19 : zoom);
                         }
                         hash = newHash;
                     }
