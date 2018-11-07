@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  server:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+    ports:
+      - 7654:7654
+    command: "npm run start"
