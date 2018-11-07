@@ -159,12 +159,17 @@ const getClosestStopAlg2 = (stops, reqCoords) => {
  * @param gpsPoints - array of gps points
  * @param q - filtered data part
  */
-const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1) => {
+const findAverage = (gpsPoints=[], q=0.25, weighting=(i, n)=> 1 + i/n) => {
+    if (gpsPoints.length === 0) return undefined;
+    const point = gpsPoints[gpsPoints.length - 1];
+
     const {sumLatitude, sumLongitude, maxPrecision, sumWeight, datetime, heading, n} = gpsPoints
         // sort data by precision and startTime
         .sort((a, b) => b.precision - a.precision || new Date(b.startTime) - new Date(a.startTime))
         // filter 0.25% of data
         .slice(Math.floor(gpsPoints.length * q))
+        // sort by time
+        .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
         // sum latitude and longitude
         .reduce((
             {sumLatitude, sumLongitude, sumWeight, maxPrecision},
@@ -173,7 +178,7 @@ const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1) => {
         ) => {
             const n = data.length;
             // iteration
-            const weight = weighting(i/n)
+            const weight = weighting(i, n);
             return {
                 sumLatitude: sumLatitude + weight * latitude,
                 sumLongitude: sumLongitude + weight * longitude,
@@ -184,9 +189,9 @@ const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1) => {
         }, {sumLatitude: 0, sumLongitude: 0, sumWeight: 0, maxPrecision: 0, n: 0});
 
     const result = {
-        latitude: sumWeight ? sumLatitude / sumWeight : undefined,
-        longitude: sumWeight ? sumLongitude / sumWeight : undefined,
-        precision: maxPrecision ? maxPrecision : undefined,
+        latitude: sumWeight ? sumLatitude / sumWeight : point.latitude,
+        longitude: sumWeight ? sumLongitude / sumWeight : point.longitude,
+        precision: maxPrecision ? maxPrecision : point.precision,
         heading, startTime: datetime
     }
 
@@ -196,10 +201,7 @@ const findAverage = (gpsPoints=[], q=0.25, weighting=x=>1) => {
 const correctRequestPoint = (reqCoords) => {
     const { childs } = reqCoords;
     if (childs && childs.length > 0) {
-        const points = childs.filter(({latitude, longitude, precision}) => (
-            coordsUtils.distance(latitude, longitude, reqCoords.latitude, reqCoords.longitude) - (precision + reqCoords.precision) > 2
-        ))
-        .concat(reqCoords);
+        const points = childs;
         const result = findAverage(points.length > 20 ? points.slice(-20) : points);
         return result;
     }
