@@ -138,6 +138,24 @@ app.get("/api/lastpoints", async (req, res) => {
     res.send(result);
 });
 
+app.get("/api/waypoints", async (req, res) => {
+    const startMs = req.query.startTime ? new Date(req.query.startTime).getTime()*1 : 0;
+    const stopMs = req.query.stopTime ? new Date(req.query.stopTime).getTime()*1 : 0;
+    const result = (await tailClosestStopRequests(req.query.cnt, startMs, stopMs))
+        .map(({request, request_corrected, response, created_at, id}) => ({
+            startTimeMs: created_at,
+            data: [
+                request,
+                response,
+                request_corrected ? request_corrected : undefined
+            ],
+            id
+        }))
+    ;
+
+    res.send(result);
+});
+
 app.listen(httpPort, () => {
     console.info("App is running at port " + httpPort);
-})
+});

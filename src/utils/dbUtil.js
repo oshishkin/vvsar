@@ -34,8 +34,11 @@ const insertClosestStopRequest = async (request, requestCorrected, response, cre
     }
 }
 
-const tailClosestStopRequests = async (count = 10) => {
-    const records = (await pool.query('SELECT id, request, request_corrected, response, created_at FROM closest_stop_request ORDER BY created_at DESC LIMIT $1', [count])).rows;
+const tailClosestStopRequests = async (count=10, startMs=0, stopMs=0) => {
+    let query = 'SELECT id, request, request_corrected, response, created_at FROM closest_stop_request where ($1::bigint=0 or created_at>=$1::bigint) and ($2::bigint=0 or created_at<=$2::bigint) and $3::bigint=$3::bigint ORDER BY created_at DESC';
+    query+= (startMs==0 || stopMs==0) ? ' LIMIT $3::bigint' : '';
+    console.debug(query);
+    const records = (await pool.query(query, [startMs, stopMs, count])).rows;
     return records;
 }
     
