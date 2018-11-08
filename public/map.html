@@ -200,48 +200,97 @@
                 responseVars = stopTimeIsValid ? (startTimeIsValid ? "&stopTime="+stopTime : "stopTime="+stopTime) : "";
                 responseVars = (cnt!=false && cnt*1>0) ? (responseVars.length>0 ? "&cnt="+cnt : "cnt="+cnt) : "";
                 
-                const responseUrl = '/api/waypoints';
-                const wayResponse = fetch(responseUrl+'?'+responseVars, {cache: 'no-store'});
-                const wayResponseJson = wayResponse.json();
-                
-                let cntMarkers = [];
-                let path = [];
-                let avgPath = [];
-                const size = wayResponseJson.length;
-                wayResponseJson.forEach(({data, startTimeMs}, idx) => {
-                    const startTime = new Date(startTimeMs - new Date().getTimezoneOffset() * 60 * 1000).toString();
-                    if (data && data.length > 0) {
-                        const { latitude, longitude, heading, precision } = data[0];
-                        const myLatlng = new google.maps.LatLng(latitude, longitude);
-                        path.push(myLatlng);
+                setTimeout(async () => {
+                    const responseUrl = '/api/waypoints';
+                    const wayResponse = await fetch(responseUrl+'?'+responseVars, {cache: 'no-store'});
+                    console.log(wayResponse);
+                    const wayResponseJson = await wayResponse.json();
                     
-                        const icon = {
-                            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                            scale: 3+(idx/size)*2,//(idx/cnt)*10,//1.5/4,
-                            fillColor: "red",
-                            fillOpacity: 0.8,
-                            strokeColor: "white",
-                            strokeWeight: 1,
-                            rotation: heading
-                        };
-                        /*const crcl = new google.maps.Circle({
-                            center: myLatlng,
-                            map: map,
-                            strokeColor: '#ffffff',
-                            strokeOpacity: 0.01,
-                            strokeWeight: 1,
-                            fillColor: '#ffffff',
-                            fillOpacity: 0.1,
-                            radius: requestElement.precision-20,
-                        });*/
-                        cntMarkers.push(new google.maps.Marker({
-                            position: myLatlng,
-                            map: map,
-                            title: startTime,
-                            icon: icon
-                        }));
+                    let cntMarkers = [];
+                    let path = [];
+                    let avgPath = [];
+                    const size = wayResponseJson.length;
+                    wayResponseJson.forEach(({data, startTimeMs}, idx) => {
+                        const startTime = new Date(startTimeMs - new Date().getTimezoneOffset() * 60 * 1000).toString();
+                        if (data && data.length > 0) {
+                            const { latitude, longitude, heading, precision } = data[0];
+                            const myLatlng = new google.maps.LatLng(latitude, longitude);
+                            avgPath.push(myLatlng);
+                        
+                            const icon = {
+                                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                scale: 3+(idx/size)*2,//(idx/cnt)*10,//1.5/4,
+                                fillColor: "blue",
+                                fillOpacity: 0.8,
+                                strokeColor: "white",
+                                strokeWeight: 1,
+                                rotation: heading
+                            };
+                            /*const crcl = new google.maps.Circle({
+                                center: myLatlng,
+                                map: map,
+                                strokeColor: '#ffffff',
+                                strokeOpacity: 0.01,
+                                strokeWeight: 1,
+                                fillColor: '#ffffff',
+                                fillOpacity: 0.1,
+                                radius: requestElement.precision-20,
+                            });*/
+                            cntMarkers.push(new google.maps.Marker({
+                                position: myLatlng,
+                                map: map,
+                                title: startTime,
+                                icon: icon
+                            }));
+
+                            if(data && data.length>2){
+                                const myLatlng1 = new google.maps.LatLng(data[2].latitude, data[2].longitude);
+                                path.push(myLatlng1);
+                        
+                                const icon1 = {
+                                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                    scale: 3+(idx/size)*2,
+                                    fillColor: "green",
+                                    fillOpacity: 0.8,
+                                    strokeColor: "white",
+                                    strokeWeight: 1,
+                                    rotation: heading
+                                };
+                            
+                                cntMarkers.push(new google.maps.Marker({
+                                    position: myLatlng1,
+                                    map: map,
+                                    title: startTime,
+                                    icon: icon1
+                                }));
+                            }
+                        }
+                    });
+
+                    let avgLine = new google.maps.Polyline({
+                        path: avgPath,
+                        geodesic: true,
+                        strokeColor: '#00ff00',
+                        strokeOpacity: 0.5,
+                        strokeWeight: 2,
+                        map: map
+                    });
+
+                    let realLine = new google.maps.Polyline({
+                        path: path,
+                        geodesic: true,
+                        strokeColor: '#0000ff',
+                        strokeOpacity: 0.5,
+                        strokeWeight: 2,
+                        map: map
+                    });
+
+                    var bounds = new google.maps.LatLngBounds();
+                    for (var i=0; i<cntMarkers.length; i++) {
+                        bounds.extend( cntMarkers[i].getPosition() );
                     }
-                });
+                    map.fitBounds(bounds);
+                }, 1000);
             }
         }
     </script>

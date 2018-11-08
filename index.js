@@ -145,9 +145,9 @@ app.get("/api/waypoints", async (req, res) => {
         .map(({request, request_corrected, response, created_at, id}) => ({
             startTimeMs: created_at,
             data: [
-                request,
+                request_corrected || request,
                 response,
-                request_corrected ? request_corrected : undefined
+                request
             ],
             id
         }))
