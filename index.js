@@ -139,8 +139,17 @@ app.get("/api/lastpoints", async (req, res) => {
 });
 
 app.get("/api/waypoints", async (req, res) => {
-    const startMs = req.query.startTime ? new Date(req.query.startTime).getTime()*1 : 0;
-    const stopMs = req.query.stopTime ? new Date(req.query.stopTime).getTime()*1 : 0;
+    //var tzOffset=1; //germany time - utc+1
+    let startMs = req.query.startTime ? new Date(req.query.startTime).getTime()*1 : 0;
+    let stopMs = req.query.stopTime ? new Date(req.query.stopTime).getTime()*1 : 0;
+    
+    if (startMs>0 || stopMs>0){
+        const tzCorrect = -(new Date().getTimezoneOffset())*60*1000;
+        startMs = startMs>0 ? startMs + tzCorrect*1 : 0;
+        stopMs = stopMs>0 ? stopMs + tzCorrect*1 : 0;
+    }
+    console.log("startMs "+startMs);
+    console.log("stopMs "+stopMs);
     const result = (await tailClosestStopRequests(req.query.cnt, startMs, stopMs))
         .map(({request, request_corrected, response, created_at, id}) => ({
             startTimeMs: created_at,

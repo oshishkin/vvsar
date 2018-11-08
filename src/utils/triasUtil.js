@@ -99,7 +99,7 @@ async function requestStopInfo(stop) {
 }
 
 function requestWeatherInfo(latlng) {
-    var tzOffset=2;
+    var tzOffset=1;
     var weatherUrl = 'http://api.openweathermap.org/data/2.5/weather/?appid=7b6e364a6ea88bdfd9ab285f380cb898&units=metric&lat=' + latlng.lat + '&lon=' + latlng.lng;
     var forecastUrl = 'http://api.openweathermap.org/data/2.5/forecast?appid=7b6e364a6ea88bdfd9ab285f380cb898&lat='+latlng.lat+'&lon='+latlng.lng+'&units=metric&cnt=8';
     var currentWeather = JSON.parse(request('GET', weatherUrl).body.toString('utf-8'));

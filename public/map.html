@@ -81,7 +81,7 @@
                     const newHash = generateHash(JSON.stringify(responseJson));
 
                     responseJson.forEach(({data, startTimeMs}) => {
-                        const startTime = new Date(startTimeMs - new Date().getTimezoneOffset() * 60 * 1000).toString();
+                        const startTime = new Date(startTimeMs*1 + new Date().getTimezoneOffset() * 60 * 1000).toString();
                         // data[0] is request
                         if (data && data.length > 0) {
                             const { latitude, longitude, heading, precision } = data[0];
@@ -192,14 +192,13 @@
                 let stopTime = getQueryVariable("stopTime");
 
                 //datetime format YYYY-MM-DDTHH:MM:SS
-                const datetimeRegexp = new RegExp('^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])T(00|[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])$');
+                const datetimeRegexp = /^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])T(00|[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])$/i;
                 const startTimeIsValid = startTime!=false && datetimeRegexp.test(startTime);
                 const stopTimeIsValid = stopTime!=false && datetimeRegexp.test(stopTime);
                 
                 let responseVars = startTimeIsValid ? "startTime="+startTime : "";
-                responseVars = stopTimeIsValid ? (startTimeIsValid ? "&stopTime="+stopTime : "stopTime="+stopTime) : "";
-                responseVars = (cnt!=false && cnt*1>0) ? (responseVars.length>0 ? "&cnt="+cnt : "cnt="+cnt) : "";
-                
+                responseVars += stopTimeIsValid ? (startTimeIsValid ? "&stopTime="+stopTime : "stopTime="+stopTime) : "";
+                responseVars += (cnt!=false && cnt*1>0) ? (responseVars.length>0 ? "&cnt="+cnt : "cnt="+cnt) : "";
                 setTimeout(async () => {
                     const responseUrl = '/api/waypoints';
                     const wayResponse = await fetch(responseUrl+'?'+responseVars, {cache: 'no-store'});
@@ -211,7 +210,7 @@
                     let avgPath = [];
                     const size = wayResponseJson.length;
                     wayResponseJson.forEach(({data, startTimeMs}, idx) => {
-                        const startTime = new Date(startTimeMs - new Date().getTimezoneOffset() * 60 * 1000).toString();
+                        const startTime = new Date(startTimeMs*1 + new Date().getTimezoneOffset() * 60 * 1000).toString();
                         if (data && data.length > 0) {
                             const { latitude, longitude, heading, precision } = data[0];
                             const myLatlng = new google.maps.LatLng(latitude, longitude);
@@ -219,7 +218,7 @@
                         
                             const icon = {
                                 path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                scale: 3+(idx/size)*2,//(idx/cnt)*10,//1.5/4,
+                                scale: 3+2*(size-idx)/size,//(idx/cnt)*10,//1.5/4,
                                 fillColor: "blue",
                                 fillOpacity: 0.8,
                                 strokeColor: "white",
@@ -239,7 +238,7 @@
                             cntMarkers.push(new google.maps.Marker({
                                 position: myLatlng,
                                 map: map,
-                                title: startTime,
+                                title: 'AVG: '+startTime,
                                 icon: icon
                             }));
 
@@ -249,7 +248,7 @@
                         
                                 const icon1 = {
                                     path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                    scale: 3+(idx/size)*2,
+                                    scale: 3+2*(size-idx)/size,
                                     fillColor: "green",
                                     fillOpacity: 0.8,
                                     strokeColor: "white",
@@ -260,7 +259,7 @@
                                 cntMarkers.push(new google.maps.Marker({
                                     position: myLatlng1,
                                     map: map,
-                                    title: startTime,
+                                    title: "REAL: "+startTime,
                                     icon: icon1
                                 }));
                             }
@@ -270,7 +269,7 @@
                     let avgLine = new google.maps.Polyline({
                         path: avgPath,
                         geodesic: true,
-                        strokeColor: '#00ff00',
+                        strokeColor: '#0000ff',
                         strokeOpacity: 0.5,
                         strokeWeight: 2,
                         map: map
@@ -279,7 +278,7 @@
                     let realLine = new google.maps.Polyline({
                         path: path,
                         geodesic: true,
-                        strokeColor: '#0000ff',
+                        strokeColor: '#00ff00',
                         strokeOpacity: 0.5,
                         strokeWeight: 2,
                         map: map
@@ -290,6 +289,8 @@
                         bounds.extend( cntMarkers[i].getPosition() );
                     }
                     map.fitBounds(bounds);
+                    var zoom = map.getZoom();
+                    map.setZoom(zoom > 19 ? 19 : zoom);
                 }, 1000);
             }
         }
